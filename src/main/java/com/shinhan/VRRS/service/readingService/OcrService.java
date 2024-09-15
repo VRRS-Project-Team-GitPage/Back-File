@@ -8,7 +8,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
@@ -24,10 +23,8 @@ public class OcrService {
     @Value("${naver.clova.api.secret}")
     private String secretKey;
 
-    private final RestTemplate restTemplate = new RestTemplate();
-
-    public StringBuffer ocr(MultipartFile file) throws IOException {
-        String format = file.getContentType().split("/")[1];
+    public StringBuffer callOcr(MultipartFile file) throws IOException {
+        String format = file.getContentType().split("/")[1]; // 포멧
         byte[] imageBytes = file.getBytes(); // 파일 -> 바이트 배열
 
         URL url = new URL(apiUrl);

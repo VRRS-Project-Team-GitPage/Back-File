@@ -16,11 +16,10 @@ public class User {
     private Long id;
 
     private String provider; // 로그인 제공자
-    private String providerId; // 로그인 제공자 ID (API 로그인)
-    private String name; // 사용자명
     private String email; // 이메일
+    private String username; // 사용자명
     private String password; // 비밀번호 (자체 로그인)
-
+    private String nickname; // 닉네임
 
     private int vegTypeId; // 채식 유형
 }

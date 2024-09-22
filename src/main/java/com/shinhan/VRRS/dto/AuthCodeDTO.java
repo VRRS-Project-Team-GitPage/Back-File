@@ -1,10 +1,12 @@
 package com.shinhan.VRRS.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class EmailResponseDTO {
+@AllArgsConstructor
+public class AuthCodeDTO {
     private String code;
 }

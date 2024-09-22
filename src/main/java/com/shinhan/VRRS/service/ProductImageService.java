@@ -19,15 +19,15 @@ public class ProductImageService {
     @Value("${file.upload-dir}")
     private String uploadDir;
 
-    public String loadProductImage(MultipartFile image) throws IOException {
+    public String uploadProductImage(MultipartFile image) throws IOException {
         String imgName = UUID.randomUUID() + "-" + image.getOriginalFilename(); // 이미지명
         String dbImgPath = "/products/" + imgName; // DB에 저장할 이미지 경로
 
-        Path dirPath = Paths.get(uploadDir + "/products/"); // 디렉토리 경로
-        if (!Files.exists(dirPath)) Files.createDirectories(dirPath); // 디렉토리 생성
+        Path dirPath = Paths.get(uploadDir + "/products/");
+        if (!Files.exists(dirPath)) Files.createDirectories(dirPath);
 
-        Path imgPath = dirPath.resolve(imgName); // 이미지 경로
-        Files.write(imgPath, image.getBytes()); // 이미지 저장
+        Path imgPath = dirPath.resolve(imgName);
+        Files.write(imgPath, image.getBytes());
         return dbImgPath;
     }
 

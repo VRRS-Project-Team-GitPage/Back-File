@@ -7,19 +7,21 @@ import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Setter
-public class User {
+public class Feedback {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
-    private String provider; // 로그인 제공자
-    private String email; // 이메일
-    private String username; // 아이디
-    private String password; // 비밀번호
-    private String nickname; // 닉네임
+    private String content;
+    private LocalDateTime date;
 
-    private int vegTypeId; // 채식 유형
+    public Feedback(String content) {
+        this.content = content;
+        this.date = LocalDateTime.now();
+    }
 }

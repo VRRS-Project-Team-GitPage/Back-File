@@ -3,9 +3,12 @@ package com.shinhan.VRRS.util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
+import java.util.Base64;
 import java.util.Date;
 import java.util.function.Function;
 
@@ -14,7 +17,13 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
-    // JWT에서 사용자명 추출
+    // SecretKey 객체로 변환
+    private SecretKey getSigningKey() {
+        byte[] keyBytes = Base64.getDecoder().decode(SECRET_KEY);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    // 사용자명 추출
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
@@ -25,8 +34,9 @@ public class JwtUtil {
         return claimsResolver.apply(claims);
     }
 
+    // 모든 Claim 추출
     private Claims extractAllClaims(String token) {
-        return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
+        return Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
     }
 
     // 사용자명으로 토큰 생성
@@ -35,7 +45,7 @@ public class JwtUtil {
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10시간 유효
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -50,6 +60,7 @@ public class JwtUtil {
         return extractExpiration(token).before(new Date());
     }
 
+    // 토큰 만료 기간 추출
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }

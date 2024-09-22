@@ -1,6 +1,6 @@
 package com.shinhan.VRRS.service;
 
-import com.shinhan.VRRS.entity.EmailMessage;
+import com.shinhan.VRRS.dto.EmailDTO;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -18,27 +18,17 @@ public class EmailService {
     private final JavaMailSender javaMailSender;
     private final SpringTemplateEngine templateEngine;
 
-    private final UserService userService;
-
-    public String sendMail(EmailMessage emailMessage, String type) {
-        String authNum = createCode(); // 인증번호 및 임시 비밀번호 생성
+    public String sendMail(EmailDTO emailDTO, String type) throws MessagingException {
+        String code = createCode(); // 인증번호 및 임시 비밀번호 생성
 
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
 
-        if (type.equals("password")) userService.setTempPassword(emailMessage.getTo(), authNum);
-
-        try {
-            MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, false, "UTF-8");
-            mimeMessageHelper.setTo(emailMessage.getTo()); // 메일 수신자
-            mimeMessageHelper.setSubject(emailMessage.getSubject()); // 메일 제목
-            mimeMessageHelper.setText(setContext(authNum, type), true); // 메일 본문 내용, HTML 여부
-            javaMailSender.send(mimeMessage); // 메일 전송
-
-            return authNum;
-
-        } catch (MessagingException e) {
-            throw new RuntimeException(e);
-        }
+        MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, false, "UTF-8");
+        mimeMessageHelper.setTo(emailDTO.getTo()); // 메일 수신자
+        mimeMessageHelper.setSubject(emailDTO.getSubject()); // 메일 제목
+        mimeMessageHelper.setText(setContext(code, type), true); // 메일 본문 내용, HTML 여부
+        javaMailSender.send(mimeMessage);
+        return code;
     }
 
     public String createCode() {

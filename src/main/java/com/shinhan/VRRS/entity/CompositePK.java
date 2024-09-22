@@ -1,13 +1,30 @@
 package com.shinhan.VRRS.entity;
 
+import lombok.NoArgsConstructor;
+
 import java.io.Serializable;
+import java.util.Objects;
 
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-@Setter
+@NoArgsConstructor
 public class CompositePK implements Serializable {
     private Long proId;
     private Long userId;
+
+    public CompositePK(Long proId, Long userId) {
+        this.proId = proId;
+        this.userId = userId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CompositePK that = (CompositePK) o;
+        return Objects.equals(proId, that.proId) && Objects.equals(userId, that.userId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(proId, userId);
+    }
 }

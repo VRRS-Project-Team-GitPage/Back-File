@@ -1,5 +1,6 @@
-package com.shinhan.VRRS.entity;
+package com.shinhan.VRRS.service;
 
+import com.shinhan.VRRS.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 

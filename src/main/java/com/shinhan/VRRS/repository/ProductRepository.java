@@ -14,6 +14,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     List<Product> findByNameContaining(String name);
 
-    @Query("SELECT p FROM Product p WHERE p.vegTypeId IN :vegtypes")
-    Slice<Product> findByCustomVegTypeId(@Param("vegtypes") List<Integer> vegTypes, Pageable pageable);
+    @Query("SELECT p FROM Product p WHERE p.vegTypeId IN :vegTypeIds")
+    Slice<Product> findByCustomVegTypeId(@Param("vegTypeIds") List<Integer> vegTypeIds, Pageable pageable);
 }

@@ -9,25 +9,21 @@ import lombok.Setter;
 public class ProductDTO {
     private Long id;
     private String name;
-    private String description;
-    private String ingredients;
-    private int proTypeId;
+    private int categoryId;
     private int vegTypeId;
-    private int rec;
-    private int notRec;
-    private int review;
+    private int recCnt;
+    private int notRecCnt;
+    private int reviewCnt;
     private String imgUrl; // 이미지 URL
 
     public ProductDTO(Product product, String imgUrl) {
         this.id = product.getId();
         this.name = product.getName();
-        this.description = product.getDescription();
-        this.ingredients = product.getIngredients();
-        this.proTypeId = product.getProTypeId();
+        this.categoryId = product.getCategoryId();
         this.vegTypeId = product.getVegTypeId();
-        this.rec = product.getRec();
-        this.notRec = product.getNotRec();
-        this.review = product.getReview();
+        this.recCnt = product.getRecCnt();
+        this.notRecCnt = product.getNotRecCnt();
+        this.reviewCnt = product.getReviewCnt();
         this.imgUrl = imgUrl;
     }
 }

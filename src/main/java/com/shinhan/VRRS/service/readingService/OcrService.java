@@ -23,7 +23,7 @@ public class OcrService {
     @Value("${naver.clova.api.secret}")
     private String secretKey;
 
-    public StringBuffer callOcr(MultipartFile file) throws IOException {
+    public StringBuffer ocr(MultipartFile file) throws IOException {
         String format = file.getContentType().split("/")[1]; // 포멧
         byte[] imageBytes = file.getBytes(); // 파일 -> 바이트 배열
 

@@ -1,19 +1,16 @@
 package com.shinhan.VRRS.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Objects;
 
 @NoArgsConstructor
+@AllArgsConstructor
 public class CompositePK implements Serializable {
     private Long proId;
     private Long userId;
-
-    public CompositePK(Long proId, Long userId) {
-        this.proId = proId;
-        this.userId = userId;
-    }
 
     @Override
     public boolean equals(Object o) {

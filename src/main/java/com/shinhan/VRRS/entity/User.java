@@ -1,9 +1,6 @@
 package com.shinhan.VRRS.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -21,5 +18,7 @@ public class User {
     private String password; // 비밀번호
     private String nickname; // 닉네임
 
-    private int vegTypeId; // 채식 유형
+    @ManyToOne
+    @JoinColumn(name = "veg_type_id")
+    private VegetarianType vegType; // 채식 유형
 }

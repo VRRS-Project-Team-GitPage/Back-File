@@ -21,16 +21,14 @@ public class ReviewDetailsService {
     private final UserRepository userRepository;
 
     // 최신 리뷰 3개 조회
-    public List<ReviewDTO> getLatest3Review(Long proId, Long userId) {
+    public List<ReviewDTO> getPreviewReview(Long proId, Long userId) {
         Pageable pageable = PageRequest.of(0, 3);
-        List<Review> reviews = reviewRepository.findLatest3ByProIdAndUserIdNot(proId, userId, pageable);
+        List<Review> reviews = reviewRepository.findLatestPreviewByProIdAndUserIdNot(proId, userId, pageable);
         List<ReviewDTO> result = new ArrayList<>();
 
         // 닉네임 및 채식유형 조회
-        for (Review review : reviews) {
-            User user = userRepository.findById(review.getUserId()).orElse(null);
-            if (user != null) result.add(new ReviewDTO(review, user));
-        }
+        for (Review review : reviews)
+            userRepository.findById(review.getUserId()).ifPresent(user -> result.add(new ReviewDTO(review, user)));
         return result;
     }
 

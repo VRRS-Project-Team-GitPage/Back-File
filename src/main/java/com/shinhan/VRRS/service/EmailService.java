@@ -1,6 +1,6 @@
 package com.shinhan.VRRS.service;
 
-import com.shinhan.VRRS.dto.EmailDTO;
+import com.shinhan.VRRS.dto.EmailMessage;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ public class EmailService {
     private final JavaMailSender javaMailSender;
     private final SpringTemplateEngine templateEngine;
 
-    public String sendMail(EmailDTO emailDTO, String type) throws MessagingException {
+    public String sendMail(EmailMessage emailDTO, String type) throws MessagingException {
         String code = createCode(); // 인증번호 및 임시 비밀번호 생성
 
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();

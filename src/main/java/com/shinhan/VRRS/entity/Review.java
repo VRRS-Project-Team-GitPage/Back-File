@@ -1,6 +1,8 @@
 package com.shinhan.VRRS.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,9 +14,9 @@ import java.time.LocalDateTime;
 @IdClass(CompositePK.class)
 public class Review {
     @Id
-    private Long proId; // 제품 ID
+    private Long proId;
     @Id
-    private Long userId; // 사용자 ID
+    private Long userId;
 
     private String content; // 리뷰 내용
     private boolean isRec; // 추천 여부

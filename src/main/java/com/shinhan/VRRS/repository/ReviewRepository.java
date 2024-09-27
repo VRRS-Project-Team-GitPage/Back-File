@@ -10,9 +10,9 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface ReviewRepository extends JpaRepository<Review, CompositePK> {
+    // 다른 사용자의 최신 리뷰 3개 가져오기
+    @Query("SELECT r FROM Review r WHERE r.proId = :proId AND r.content IS NOT NULL AND r.userId != :userId ORDER BY r.date DESC")
+    List<Review> findLatestPreviewByProIdAndUserIdNot(@Param("proId") Long proId, @Param("userId") Long userId, Pageable pageable);
 
-
-    // 특정 proId로 content가 null이 아니며 userId가 아닌 최신 3개의 리뷰 가져오기
-    @Query("SELECT p FROM Review p WHERE p.proId = :proid AND p.content IS NOT NULL AND p.userId != :userid ORDER BY p.date DESC")
-    List<Review> findLatest3ByProIdAndUserIdNot(@Param("proid") Long proId, @Param("userid") Long userId, Pageable pageable);
+    List<Review> findByUserId(Long userId);
 }

@@ -11,10 +11,9 @@ public class BookmarkController {
     private final BookmarkService bookmarkService;
 
     @PostMapping("/save")
-    public String saveBookmark(@RequestParam("pro-id") Long proId,
-                               @RequestParam("user-id") Long userId) {
+    public String saveBookmark(@RequestParam("proId") Long proId,
+                               @RequestParam("userId") Long userId) {
         bookmarkService.saveBookmark(proId, userId);
         return "Bookmark saved successfully!";
     }
 }
-

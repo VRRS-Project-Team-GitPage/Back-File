@@ -1,9 +1,6 @@
 package com.shinhan.VRRS.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,12 +13,19 @@ public class Product {
     private Long id;
 
     private String name; // 제품명
-    private String imgPath; // 제품 사진 경로
+    private String imgPath; // 이미지 경로
     private String ingredients; // 원재료
-    private int categoryId; // 카테고리
-    private int vegTypeId; // 채식 유형
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category; // 카테고리
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "veg_type_id")
+    private VegetarianType vegType; // 채식유형
 
     private int recCnt; // 추천수
     private int notRecCnt; // 비추천수
     private int reviewCnt; // 리뷰수
+    private int bookmarkCnt; // 북마크수
 }

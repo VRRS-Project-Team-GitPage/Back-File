@@ -5,6 +5,7 @@ import com.shinhan.VRRS.entity.Review;
 import com.shinhan.VRRS.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -15,12 +16,14 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
 
     // 리뷰 저장 메서드
+    @Transactional
     public Review saveReview(Long proId, Long userId, String content, boolean isRec) {
         Review review = new Review(proId, userId, content, isRec);
         return reviewRepository.save(review);
     }
 
     // 리뷰 수정 메서드
+    @Transactional
     public Review updateReview(Long proId, Long userId, String newContent, boolean isRec) {
         CompositePK compositePK = new CompositePK(proId, userId);
 
@@ -39,6 +42,7 @@ public class ReviewService {
     }
 
     // 리뷰 삭제 메서드
+    @Transactional
     public void deleteReview(Long proId, Long userId) {
         CompositePK compositePK = new CompositePK(proId, userId);
 

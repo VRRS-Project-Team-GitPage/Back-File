@@ -4,6 +4,7 @@ import com.shinhan.VRRS.entity.Bookmark;
 import com.shinhan.VRRS.entity.CompositePK;
 import com.shinhan.VRRS.repository.BookmarkRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class BookmarkService {
@@ -13,6 +14,7 @@ public class BookmarkService {
         this.bookmarkRepository = bookmarkRepository;
     }
 
+    @Transactional
     public void saveBookmark(Long proId, Long userId) {
         Bookmark bookmark = new Bookmark(proId, userId);
         bookmarkRepository.save(bookmark);

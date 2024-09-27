@@ -15,7 +15,7 @@ import java.nio.file.Paths;
 import java.util.UUID;
 
 @Service
-public class ProductImageService {
+public class ImageService {
     @Value("${file.upload-dir}")
     private String uploadDir;
 
@@ -31,7 +31,7 @@ public class ProductImageService {
         return dbImgPath;
     }
 
-    public Resource getProductImage(@PathVariable String imgPath) throws MalformedURLException {
+    public Resource getImage(String imgPath) throws MalformedURLException {
         Path file = Paths.get(uploadDir).resolve(imgPath);
         return new UrlResource(file.toUri());
     }

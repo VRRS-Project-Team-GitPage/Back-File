@@ -29,7 +29,7 @@ public class ProductService {
 
     public Slice<ProductDTO> getAllProduct(Integer vegTypeId, Pageable pageable) {
         // 전체 채식유형
-        if (vegTypeId == 7) return productRepository.findAll(pageable).map(ProductDTO::new);
+        if (vegTypeId == 6) return productRepository.findAll(pageable).map(ProductDTO::new);
 
         // 특정 채식유형
         List<Integer> vegTypeIds = new ArrayList<>();
@@ -38,31 +38,17 @@ public class ProductService {
         return productRepository.findByCustomVegTypeId(vegTypeIds, pageable).map(ProductDTO::new);
     }
 
-    public List<ProductDTO> getProduct(String name) {
+    public List<ProductDTO> getProducts(String name) {
         return productRepository.findByCustomNameContaining(name).stream().map(ProductDTO::new).toList();
+    }
+
+    public Product getProduct(String name) {
+        return productRepository.findProductByNameIgnoringSpaces(name).orElse(null);
     }
 
     @Transactional
     public void saveProduct(Product product, String imagePath) {
         product.setImgPath(imagePath); // 이미지 경로 설정
-        productRepository.save(product);
-    }
-
-    // isRec: rec 업데이트(true), notRec 업데이트(false)
-    // isIncrement: 증가(true), 감소(flase)
-    public void updateProductReview(Long id, boolean isRec, boolean isIncrement) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
-
-        if (isIncrement) {
-            if (isRec) product.setRecCnt(product.getRecCnt() + 1);
-            else product.setNotRecCnt(product.getNotRecCnt() + 1);
-        }
-        else { // 값이 0 미만으로 내려가지 않도록 설정
-            if (isRec) product.setRecCnt(Math.max(product.getRecCnt() - 1, 0));
-            else product.setNotRecCnt(Math.max(product.getNotRecCnt() - 1, 0));
-        }
-
         productRepository.save(product);
     }
 

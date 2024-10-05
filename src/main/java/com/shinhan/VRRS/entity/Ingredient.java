@@ -12,5 +12,5 @@ public class Ingredient {
     @Id
     private Integer id;
     private String name;
-    private Integer veg_type_id;
+    private Integer vegTypeId;
 }

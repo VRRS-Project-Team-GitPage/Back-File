@@ -3,6 +3,8 @@ package com.shinhan.VRRS.service.readingService;
 import com.nimbusds.jose.shaded.gson.Gson;
 import com.nimbusds.jose.shaded.gson.JsonArray;
 import com.nimbusds.jose.shaded.gson.JsonObject;
+import com.shinhan.VRRS.dto.OcrResponse;
+import com.shinhan.VRRS.util.IngredientUtil;
 import com.shinhan.VRRS.util.JsonUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -15,6 +17,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
 
+import static com.shinhan.VRRS.util.IngredientUtil.*;
+
 @Service
 public class OcrService {
     @Value("${naver.clova.api.url}")
@@ -23,7 +27,7 @@ public class OcrService {
     @Value("${naver.clova.api.secret}")
     private String secretKey;
 
-    public StringBuffer ocr(MultipartFile file) throws IOException {
+    public StringBuffer callOcr(MultipartFile file) throws IOException {
         String format = file.getContentType().split("/")[1]; // 포멧
         byte[] imageBytes = file.getBytes(); // 파일 -> 바이트 배열
 
@@ -69,22 +73,52 @@ public class OcrService {
         return response;
     }
 
-    public List<String> parseJson(String response) {
+//    public List<String> parseJson(StringBuffer response) {
+    public OcrResponse parseJson(String response) {
         //json 파싱
         Gson gson = new Gson();
 //        JsonObject jobj = gson.fromJson(response.toString(), JsonObject.class);
-        JsonObject jObj = gson.fromJson(response, JsonObject.class); // 테스트용
-        System.out.println("(빈 json: " + jObj.isEmpty() + ")");
+        JsonObject jobj = gson.fromJson(response, JsonObject.class); // 테스트용
 
         //images 배열 -> obj 화
-        JsonArray jArray = (JsonArray) jObj.get("images");
+        JsonArray jArray = (JsonArray) jobj.get("images");
         JsonObject JSONObjImage = (JsonObject) jArray.get(0);
         JsonArray s = (JsonArray) JSONObjImage.get("fields");
 
         List<Map<String, Object>> m = JsonUtil.getListMapFromJsonArray(s);
-        List<String> result = new ArrayList<>();
-        for (Map<String, Object> as : m) result.add((String) as.get("inferText"));
+        List<String> textList = new ArrayList<>();
+        List<Double> startCoords = new ArrayList<>(); // vertices 리스트 추가
+        List<Double> endCoords = new ArrayList<>(); // vertices 리스트 추가
 
-        return result;
+        for (Map<String, Object> as : m) {
+            textList.add((String) as.get("inferText"));
+
+            // "boundingPoly"에서 "vertices"의 값을 추출
+            Map<String, Object> boundingPoly = (Map<String, Object>) as.get("boundingPoly");
+            List<Map<String, Object>> vertices = (List<Map<String, Object>>) boundingPoly.get("vertices");
+
+            if (vertices != null && !vertices.isEmpty()) {
+                Map<String, Object> vertex1 = vertices.get(0);
+                double x = (double) vertex1.get("x");
+
+                // 첫 번째 vertex의 x 값을 저장
+                startCoords.add(x);
+
+                Map<String, Object> vertex2 = vertices.get(1);
+                x = (double) vertex2.get("x");
+
+                // 두 번째 vertex의 x 값을 저장
+                endCoords.add(x);
+            }
+        }
+
+        String productName = IngredientUtil.extractProductName(textList, startCoords, endCoords);
+        List<String> ingredients = IngredientUtil.extractIngredient(textList, startCoords, endCoords);
+        List<String> cleanIngredients = IngredientUtil.extractCleanIngredient(ingredients);
+
+        // 괄호 짝이 맞지 않으면 원본 원재료 리스트를 반환
+        if (cleanIngredients == null)
+            return new OcrResponse(productName, ingredients, false);
+        return new OcrResponse(productName, cleanIngredients, true);
     }
 }

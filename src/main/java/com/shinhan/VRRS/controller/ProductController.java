@@ -32,7 +32,7 @@ public class ProductController {
 
     // 모든 제품 조회
     @GetMapping
-    public ResponseEntity<Slice<ProductDTO>> getAllProduct(@RequestParam(name = "vegTypeId", defaultValue = "7") Integer vegTypeId,
+    public ResponseEntity<Slice<ProductDTO>> getAllProduct(@RequestParam(name = "vegTypeId", defaultValue = "6") Integer vegTypeId,
                                                            Pageable pageable) {
         Slice<ProductDTO> products = productService.getAllProduct(vegTypeId, pageable);
         return ResponseEntity.ok(products);
@@ -40,8 +40,8 @@ public class ProductController {
 
     // 제품 조회
     @GetMapping("/search")
-    public ResponseEntity<List<ProductDTO>> getProduct(@RequestParam("name") String name) {
-        List<ProductDTO> products = productService.getProduct(name);
+    public ResponseEntity<List<ProductDTO>> getProducts(@RequestParam("name") String name) {
+        List<ProductDTO> products = productService.getProducts(name);
         if (products.isEmpty())
             return ResponseEntity.noContent().build(); // 204 No Content
         return ResponseEntity.ok(products);

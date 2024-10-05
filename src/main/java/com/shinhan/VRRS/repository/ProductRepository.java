@@ -9,12 +9,19 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
     Boolean existsByName(String name);
 
     @Query("SELECT p FROM Product p WHERE REPLACE(p.name, ' ', '') LIKE %:name%")
     List<Product> findByCustomNameContaining(@Param("name") String name);
+
+    @Query("SELECT p FROM Product p WHERE REPLACE(p.name, ' ', '') = :name")
+    Optional<Product> findProductByNameIgnoringSpaces(@Param("name") String name);
+
+    @Query("SELECT p FROM Product p WHERE p.vegType.id IN :vegTypeIds")
+    List<Product> findByCustomVegTypeId(@Param("vegTypeIds") List<Integer> vegTypeIds);
 
     @Query("SELECT p FROM Product p WHERE p.vegType.id IN :vegTypeIds")
     Slice<Product> findByCustomVegTypeId(@Param("vegTypeIds") List<Integer> vegTypeIds, Pageable pageable);

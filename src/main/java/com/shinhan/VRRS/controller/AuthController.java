@@ -16,6 +16,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/auth")
@@ -53,10 +56,10 @@ public class AuthController {
 
     // 아이디 찾기
     @PostMapping("/find/username")
-    public ResponseEntity<UsernameResponse> getUsername(@RequestParam("email") String email) {
+    public ResponseEntity<Map<String, String>> getUsername(@RequestParam("email") String email) {
         User user = userService.getUserByEmail(email);
         if (user == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 Not Found
-        return ResponseEntity.ok(new UsernameResponse(user.getUsername()));
+        return ResponseEntity.ok(Map.of("username", user.getUsername()));
     }
 
     // 비밀번호 찾기

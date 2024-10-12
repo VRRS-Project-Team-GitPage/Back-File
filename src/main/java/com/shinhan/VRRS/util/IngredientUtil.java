@@ -7,9 +7,9 @@ import java.util.Stack;
 import java.util.regex.Pattern;
 
 public class IngredientUtil {
-    private static final String[] KEYWORDS = {"식품유형", "식품의", "제조", "품목보고", "기한", "내용량", "재질", "업소",
-                                              "소재지", "성분", "참고", "제품은", "보관", "개봉", "판매", "방법", "(주)",
-                                              "소비자", "상담", "직사광선"};
+    private static final String[] KEYWORDS = {"제품명", "식품유형", "식품의", "제조", "기한", "내용량", "재질", "업소",
+                                              "소재지", "성분", "참고", "제품은", "보관", "개봉", "판매", "방법",
+                                              "(주)", "소비자", "상담", "직사광선"};
     private static final String[] ALLERGY_INGREDIENTS = {"밀", "대두", "쇠고기", "돼지고기", "닭고기", "우유", "메밀",
                                                         "토마토", "계란", "아황산류", "조개류", "알류", "난류"};
     private static final String[] COUNTRIES = {"미국", "캐나다", "호주", "중국", "러시아", "베트남", "프랑스", "브라질",
@@ -20,47 +20,36 @@ public class IngredientUtil {
     private static final Pattern SPECIAL_CHAR_PATTERN = Pattern.compile("[\\[\\]:]");  // 특수문자 확인
     private static final Pattern INGREDIENT_SEPARATOR = Pattern.compile("^[*·]?[가-힣]+[:/]");  // 원재료 구분자 확인
 
-    public static String extractProductName(List<String> textList, List<Double> startCoords, List<Double> endCoords) {
-        double prevEndX = 0.0;  // 이전 종료 좌표
+    public static String extractReportNum(List<String> textList) {
+        StringBuilder reportNum = new StringBuilder();  // 품목보고번호
 
-        StringBuilder productName = new StringBuilder();  // 제품명
+        boolean isExtractingReportNumber = false;
 
-        boolean isExtractingProductName = false;
-
-        for (int i = 0; i < textList.size(); i++) {
-            String text = textList.get(i);
-            double startX = startCoords.get(i);
-            double endX = endCoords.get(i);
-
-            // 1. 새로운 줄 여부 확인 (이전 종료 좌표보다 시작 좌표가 작을 경우)
-            if (startX < prevEndX && !productName.isEmpty()) break;
-
-            prevEndX = endX;  // 종료 좌표 갱신
-
-            // 2. 일반 키워드 확인
+        for (String text : textList) {
+            // 1. 일반 키워드 확인
             if (isKeyword(text) || (text.contains("원재료") || text.contains("원료"))) {
-                // 제품명 추출 중이면 종료
-                if (isExtractingProductName) break;
+                if (isExtractingReportNumber) break;
                 continue;
             }
 
-            // 2. "제품명" 키워드 확인
-            if (text.contains("제품명")) {
+            // 2. "품목" 키워드 확인
+            if (text.contains("품목")) {
                 if (text.contains(":")) {
                     text = text.split(":", 2)[1];
-                    productName = new StringBuilder(text);
+                    reportNum = new StringBuilder(text);
                 }
-                isExtractingProductName = true;
+                isExtractingReportNumber = true;
                 continue;
             }
 
-            // 3. 제품명 추출 중이면 텍스트 추가
-            if (isExtractingProductName)
-                productName.append(text);
+            // 3. 품목보고번호 추출 중이면 텍스트 추가
+            if (isExtractingReportNumber)
+                reportNum.append(text);
         }
 
-        if (productName.isEmpty()) return null;
-        return productName.toString().trim();
+        if (reportNum.isEmpty()) return null;
+        String[] parts = reportNum.toString().split(",");
+        return parts[0].replaceAll("[^0-9]", "");
     }
 
     public static List<String> extractIngredient(List<String> textList, List<Double> startCoords, List<Double> endCoords) {
@@ -121,7 +110,7 @@ public class IngredientUtil {
 
             // 2. 일반 키워드 확인
             if (!isSkip) {
-                if (isKeyword(text) || text.contains("제품명")) {
+                if (isKeyword(text) || text.contains("품목")) {
                     // 원재료 추출 중이고 원재료 리스트가 비어있지 않으면 종료
                     if (isExtractingIngredients) {
                         if (!tempIngredients.isEmpty()) {
@@ -166,9 +155,8 @@ public class IngredientUtil {
             if (isSkip) continue;  // 줄 스킵
 
             // 4. 원재료로 추정되는 텍스트 처리
-            if (!isSimpleShape && !isExtractingIngredients) {
+            if (!isSimpleShape && !isExtractingIngredients)
                 if (containsKoreanCharacter(text)) tempIngredient.append(text);
-            }
 
             // 5. 원재료 추출 중이면 텍스트 추가
             if ((isSimpleShape || ingredientsX - ERROR_MARGIN < startX) && isExtractingIngredients) {
@@ -250,44 +238,40 @@ public class IngredientUtil {
     public static List<String> extractCleanIngredient(List<String> textList) {
         List<String> cleanedIngredients = new ArrayList<>();
 
-        boolean isFullBracket = true;
-
         for (String text : textList) {
             if (isIngredientSeparator(text))
                 text = text.split("[:/]", 2)[1];
 
-            // 중괄호 변환 및 괄호 수정
-            if (text.matches(".*[\\[\\]{}].*")) {
-                text = text.replace("{", "[").replace("}", "]");
-                text = fixBrackets(text);
-            }
+            text = removePercentagesAndBrackets(text);
+            text = text.replaceAll("([)\\]])(?!,|\\s*[()\\[\\]])", "$1,");  // 닫는 괄호 뒤에 콤마 추가
 
-            // 괄호 짝이 맞는지 확인
-            if (areBracketsBalanced(text)) {
-                text = removePercentagesAndBrackets(text);
-                text = text.replaceAll("([)\\]])(?!,|\\s*[()\\[\\]])", "$1,");  // 닫는 괄호 뒤에 콤마 추가
+            // 괄호 밖 ","를 기준으로 분리
+            List<String> tempList = splitByCommaOutsideBrackets(text);
 
-                // 괄호 밖 ","를 기준으로 분리
-                List<String> tempList = splitByCommaOutsideBrackets(text);
-
-                for (String temp : tempList) {
-                    if (temp.isEmpty()) continue;
-                    else if (temp.contains("(") || temp.contains("[")) {
-                        temp = removeOrigin(temp);
-                        if (!temp.contains("(") && temp.contains("["))
-                            temp = temp.replace("[", "(").replace("]", ")");
+            for (String temp : tempList) {
+                if (temp.isEmpty()) continue;
+                else if (temp.contains("(") || temp.contains("[")) {
+                    temp = removeOrigin(temp);
+                    if(temp.contains("[")) {
+                        temp = modifyIngredients(temp);
+                        // 괄호 밖 ","를 기준으로 분리
+                        List<String> tList = splitByCommaOutsideBrackets(temp);
+                        if (tList.size() > 1) {
+                            for (String t : tList) {
+                                t = t.replaceAll("([가-힣])\\d+종|([가-힣])\\d+(?![가-힣])", "$1$2"); // 한글 뒤 숫자 제거
+                                cleanedIngredients.add(t);
+                            }
+                            continue;
+                        }
                     }
-                    temp = temp.replaceAll("([가-힣])\\d+(?![가-힣])", "$1");  // 한글 뒤 숫자 제거
-                    cleanedIngredients.add(temp);
+                    if (!temp.contains("(") && temp.contains("["))
+                        temp = temp.replace("[", "(").replace("]", ")");
                 }
-            } else {
-                isFullBracket = false;
-                break;
+                temp = temp.replaceAll("([가-힣])\\d+종|([가-힣])\\d+(?![가-힣])", "$1$2"); // 한글 뒤 숫자 제거
+                cleanedIngredients.add(temp);
             }
         }
 
-        // 괄호 짝이 맞으면 반환
-        if (!isFullBracket) return null;
         return removeDuplicates(cleanedIngredients);  // 중복 제거
     }
 
@@ -323,6 +307,22 @@ public class IngredientUtil {
     // 원재료 구분자 확인 메소드
     private static boolean isIngredientSeparator(String input) {
         return INGREDIENT_SEPARATOR.matcher(input).find();
+    }
+
+    // 괄호 처리 메서드
+    public static List<String> processIngredients(List<String> ingredients) {
+        for (int i = 0; i < ingredients.size(); i++) {
+            String text = ingredients.get(i);
+
+            if (text.matches(".*[\\[\\]{}].*")) {
+                text = text.replace("{", "[").replace("}", "]");
+                text = fixBrackets(text);
+            }
+
+            if (!areBracketsBalanced(text)) return null;
+            ingredients.set(i, text);
+        }
+        return ingredients; // 처리된 원재료 리스트 반환
     }
 
     // 괄호 짝이 맞는지 확인하는 메서드
@@ -380,6 +380,33 @@ public class IngredientUtil {
         return new String(result);
     }
 
+    // 대괄호 처리 메서드
+    public static String modifyIngredients(String ingredients) {
+        // 대괄호 개수 및 소괄호 포함 여부 확인
+        int openBrackets = 0;
+        boolean hasParentheses = ingredients.contains("(");
+
+        // 중첩된 대괄호 체크
+        for (char ch : ingredients.toCharArray()) {
+            if (ch == '[') {
+                openBrackets++;
+            } else if (ch == ']') {
+                openBrackets--;
+            }
+        }
+
+        // 대괄호가 중첩된 경우
+        if (openBrackets > 1) {
+            // 소괄호가 있으면 외부 대괄호 제거, 없으면 내부 대괄호를 소괄호로 변환
+            if (hasParentheses)
+                ingredients = ingredients.replaceFirst("^[^\\[]*\\[", "").replaceFirst("]$", "");
+            else
+                ingredients = ingredients.replaceAll("\\[([^\\[\\]]+)]", "($1)");
+        }
+
+        return ingredients; // 어떤 조건에도 해당하지 않는 경우 원본 반환
+    }
+
     // 문자열 분리 메서드
     public static List<String> splitByCommaOutsideBrackets(String input) {
         List<String> result = new ArrayList<>();
@@ -430,7 +457,7 @@ public class IngredientUtil {
         return input.replaceAll("\\(외국산:[^)]*\\)", "")  // '외국산:'이 들어간 소괄호 전체 제거
                 .replaceAll("외국산\\([^)]*\\)", "")  // '외국산' 뒤에 나오는 소괄호 제거
                 .replaceAll("\\b[가-힣]+산\\b", "")  // 'OO산' 형태의 원산지 제거
-                .replaceAll("\\b(" + countryPattern + ")\\b", "")  // 국가명만 제거
+                .replaceAll("\\b(" + countryPattern + ")\\b", "")  // 국가명 제거
                 .replaceAll(",\\)", ")")  // 콤마 제거 후 괄호 닫기
                 .replaceAll("\\([^가-힣]*\\)", "")  // 소괄호 안에 한글이 없는 경우 괄호 제거
                 .replaceAll("\\[[^가-힣]*]", "")  // 대괄호 안에 한글이 없는 경우 제거

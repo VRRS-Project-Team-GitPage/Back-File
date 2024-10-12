@@ -1,10 +1,17 @@
 package com.shinhan.VRRS.controller;
 
+import com.shinhan.VRRS.dto.ProductReview;
+import com.shinhan.VRRS.dto.ReviewDTO;
+import com.shinhan.VRRS.dto.ReviewRequest;
+import com.shinhan.VRRS.dto.UserReview;
 import com.shinhan.VRRS.entity.Review;
 import com.shinhan.VRRS.service.ReviewService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/review")
@@ -12,31 +19,62 @@ import org.springframework.web.bind.annotation.*;
 public class ReviewController {
     private final ReviewService reviewService;
 
+    // 제품 리뷰 조회
+    @GetMapping("/product/{proId}")
+    public ResponseEntity<ProductReview> getProductReviews(@PathVariable("proId") Long proId,
+                                                           @RequestParam("userId") Long userId,
+                                                           @RequestParam(name = "sort", defaultValue = "asc") String sort) {
+        ReviewDTO review = reviewService.getUerReview(proId, userId);
+        List<Review> reviews = reviewService.getProductReviews(proId, userId, sort);
+
+        if (review == null && reviews.isEmpty()) return ResponseEntity.noContent().build(); // 204 No Content
+        return ResponseEntity.ok(new ProductReview(review, reviewService.getProductReviews(reviews)));
+    }
+
+    // 사용자 리뷰 조회
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<UserReview>> getReviewsByUserId(@PathVariable("userId") Long userId,
+                                                               @RequestParam(name = "sort", defaultValue = "asc") String sort) {
+        List<Review> reviews = reviewService.getUserReviews(userId, sort);
+        if (reviews.isEmpty()) return ResponseEntity.noContent().build(); // 204 No Content
+        return ResponseEntity.ok(reviewService.getUserReviews(reviews));
+    }
+
     // 리뷰 등록
     @PostMapping("/submit")
-    public ResponseEntity<Review> submitReview(@RequestParam("pro-id") Long proId,
-                                               @RequestParam("user-id") Long userId,
-                                               @RequestParam("content") String content,
-                                               @RequestParam("rec") boolean isRec) {
-        Review review = reviewService.saveReview(proId, userId, content, isRec);
-        return ResponseEntity.ok(review);
+    public ResponseEntity<Review> submitReview(@RequestBody ReviewRequest request) {
+        try {
+            Review review = reviewService.saveReview(
+                    request.getProId(), request.getUserId(), request.getContent(), request.isRec()
+            );
+            return ResponseEntity.ok(review);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 Not Found
+        }
     }
 
     // 리뷰 수정
     @PutMapping("/update")
-    public ResponseEntity<Review> updateReview(@RequestParam("pro-id") Long proId,
-                                               @RequestParam("user-id") Long userId,
-                                               @RequestParam("content") String content,
-                                               @RequestParam("rec") boolean isRec) {
-        Review updatedReview = reviewService.updateReview(proId, userId, content, isRec);
-        return ResponseEntity.ok(updatedReview);
+    public ResponseEntity<Review> updateReview(@RequestBody ReviewRequest request) {
+        try {
+            Review review = reviewService.updateReview(
+                    request.getProId(), request.getUserId(), request.getContent(), request.isRec()
+            );
+            return ResponseEntity.ok(review);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 Not Found
+        }
     }
 
     // 리뷰 삭제
     @DeleteMapping("/delete")
-    public ResponseEntity<String> deleteReview(@RequestParam("pro-id") Long proId,
-                                               @RequestParam("user-id") Long userId) {
-        reviewService.deleteReview(proId, userId);
-        return ResponseEntity.ok("리뷰가 성공적으로 삭제되었습니다.");
+    public ResponseEntity<Void> deleteReview(@RequestParam("proId") Long proId,
+                                             @RequestParam("userId") Long userId) {
+        try {
+            reviewService.deleteReview(proId, userId);
+            return ResponseEntity.noContent().build(); // 204 No Content
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 Not Found
+        }
     }
 }

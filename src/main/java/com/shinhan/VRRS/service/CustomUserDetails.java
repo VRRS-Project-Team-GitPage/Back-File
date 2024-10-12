@@ -1,6 +1,7 @@
 package com.shinhan.VRRS.service;
 
 import com.shinhan.VRRS.entity.User;
+import com.shinhan.VRRS.entity.VegetarianType;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -12,6 +13,12 @@ public class CustomUserDetails implements UserDetails {
     public CustomUserDetails(User user) {
         this.user = user;
     }
+
+    public Long getId() {return user.getId();}
+
+    public String getNickname() {return user.getNickname();}
+
+    public VegetarianType getVegType() {return user.getVegType();}
 
     @Override
     public String getUsername() {

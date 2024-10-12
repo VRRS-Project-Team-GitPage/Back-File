@@ -6,8 +6,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class IngredientRequest {
-    private String productName;
+    private String reportNum;
     private Integer vegTypeId;
     private String ingredients;
-    private boolean isFullBracket;
+    private boolean exists;
+    private boolean fullBracket;
 }

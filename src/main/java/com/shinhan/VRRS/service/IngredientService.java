@@ -1,4 +1,4 @@
-package com.shinhan.VRRS.service.readingService;
+package com.shinhan.VRRS.service;
 
 import com.shinhan.VRRS.dto.IngredientResponse;
 import com.shinhan.VRRS.repository.IngredientRepository;
@@ -27,7 +27,7 @@ public class IngredientService {
 
         if (proVegTypeId != null && vegTypeIds.contains(proVegTypeId)) {
             consumables.addAll(ingredients);
-            return new IngredientResponse(finalVegTypeId, null, consumables, nonConsumables, unidentifiables);
+            return new IngredientResponse(null, null, consumables, nonConsumables, unidentifiables);
         }
 
         for (String ingredient : ingredients) {
@@ -134,6 +134,8 @@ public class IngredientService {
         if (finalVegTypeId != null && finalVegTypeId != 7 && hasNull)
             finalVegTypeId = null;
 
+        if (proVegTypeId != null)
+            return new IngredientResponse(null, null, consumables, nonConsumables, unidentifiables);
         return new IngredientResponse(finalVegTypeId, ingredients.toString(), consumables, nonConsumables, unidentifiables);
     }
 

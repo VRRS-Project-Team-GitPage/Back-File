@@ -5,10 +5,9 @@ import com.shinhan.VRRS.entity.Review;
 import com.shinhan.VRRS.entity.User;
 import com.shinhan.VRRS.entity.VegetarianType;
 import com.shinhan.VRRS.repository.*;
+import com.shinhan.VRRS.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,8 +17,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
-    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
     private final VegetarianTypeRepository vegTypeRepository;
     private final ReviewRepository reviewRepository;
     private final BookmarkRepository bookmarkRepository;
@@ -33,12 +33,22 @@ public class UserService implements UserDetailsService {
         return userRepository.existsByUsername(username);
     }
 
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId).orElse(null);
+    }
+
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
     }
 
     public User getUserByUsername(String username) {
         return userRepository.findByUsername(username).orElse(null);
+    }
+
+    public User getUserFromJwt(String jwt) {
+        String jwtToken = jwt.substring(7); // 'Bearer ' 제거
+        String username = jwtUtil.extractUsername(jwtToken); // 아이디 추출
+        return getUserByUsername(username); // 사용자 정보 반환
     }
 
     @Transactional
@@ -79,10 +89,22 @@ public class UserService implements UserDetailsService {
         userRepository.deleteById(id);
     }
 
+    @Transactional
+    public void updateNicknameAndVegType(User user, String nickname, Integer vegTypeId) {
+        // 채식 유형 찾기
+        VegetarianType vegType = vegTypeRepository.findById(vegTypeId).orElse(null);
+
+        // 사용자 이름 및 채식 유형 업데이트
+        user.setNickname(nickname);
+        user.setVegType(vegType);
+
+        // 변경사항 저장
+        userRepository.save(user);
+    }
+
     @Override
-    public UserDetails loadUserByUsername(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    public CustomUserDetails loadUserByUsername(String username) {
+        User user = userRepository.findByUsername(username).orElse(null);
         return new CustomUserDetails(user);
     }
 }

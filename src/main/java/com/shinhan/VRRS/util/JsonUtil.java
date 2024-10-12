@@ -1,38 +1,35 @@
 package com.shinhan.VRRS.util;
 
-import com.nimbusds.jose.shaded.gson.JsonArray;
-import com.nimbusds.jose.shaded.gson.JsonObject;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
 public class JsonUtil {
-    @SuppressWarnings("unchecked")
-    public static Map<String, Object> getMapFromJsonObject(JsonObject jsonObject) {
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    public static Map<String, Object> getMapFromJsonNode(JsonNode jsonNode) {
         Map<String, Object> map = null;
         try {
-            map = new ObjectMapper().readValue(jsonObject.toString(), Map.class);
-        } catch (IOException e) {
+            map = objectMapper.convertValue(jsonNode, new TypeReference<>() {});
+        } catch (Exception e) {
             log.error("Error: {}", e.getMessage());
         }
         return map;
     }
 
-    public static List<Map<String, Object>> getListMapFromJsonArray(JsonArray jsonArray) {
-        List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+    public static List<Map<String, Object>> getListMapFromJsonArray(ArrayNode jsonArray) {
+        List<Map<String, Object>> list = new ArrayList<>();
 
         if (jsonArray != null) {
-            int jsonSize = jsonArray.size();
-
-            for (int i = 0; i < jsonSize; i++) {
-                Map<String, Object> map = getMapFromJsonObject((JsonObject)jsonArray.get(i));
+            for (JsonNode jsonNode : jsonArray) {
+                Map<String, Object> map = getMapFromJsonNode(jsonNode);
                 list.add(map);
             }
         }

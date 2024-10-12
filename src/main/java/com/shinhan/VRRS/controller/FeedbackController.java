@@ -13,8 +13,8 @@ public class FeedbackController {
     private final FeedbackService feedbackService;
 
     @PostMapping("/submit")
-    public ResponseEntity<Feedback> submitFeedback(@RequestParam("content") String content) {
-        Feedback feedback = feedbackService.saveFeedback(content);
-        return ResponseEntity.ok(feedback);
+    public ResponseEntity<Void> submitFeedback(@RequestParam("content") String content) {
+        feedbackService.saveFeedback(content);
+        return ResponseEntity.noContent().build(); // 204 No Content
     }
 }

@@ -2,20 +2,17 @@ package com.shinhan.VRRS.service;
 
 import com.shinhan.VRRS.entity.Feedback;
 import com.shinhan.VRRS.repository.FeedbackRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class FeedbackService {
     private final FeedbackRepository feedbackRepository;
 
-    public FeedbackService(FeedbackRepository feedbackRepository) {
-        this.feedbackRepository = feedbackRepository;
-    }
-
     @Transactional
-    public Feedback saveFeedback(String content) {
-        Feedback feedback = new Feedback(content);
-        return feedbackRepository.save(feedback);
+    public void saveFeedback(String content) {
+        feedbackRepository.save(new Feedback(content));
     }
 }

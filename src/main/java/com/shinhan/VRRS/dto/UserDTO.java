@@ -8,7 +8,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class UserDTO {
-    private String provider; // 로그인 제공자
     private String email; // 이메일
     private String username; // 아이디
     private String password; // 비밀번호
@@ -16,13 +15,6 @@ public class UserDTO {
     private int vegTypeId; // 채식유형
 
     public User convertToEntity(VegetarianType vegType) {
-        User user = new User();
-        user.setProvider(provider);
-        user.setEmail(email);
-        user.setUsername(username);
-        user.setPassword(password);
-        user.setNickname(nickname);
-        user.setVegType(vegType);
-        return user;
+        return new User(email, username, password, nickname, vegType);
     }
 }

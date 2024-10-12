@@ -6,7 +6,7 @@ import com.shinhan.VRRS.entity.Product;
 import com.shinhan.VRRS.service.BookmarkService;
 import com.shinhan.VRRS.service.ImageService;
 import com.shinhan.VRRS.service.ProductService;
-import com.shinhan.VRRS.service.ReviewDetailsService;
+import com.shinhan.VRRS.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +28,7 @@ public class ProductController {
     private final ProductService productService;
     private final ImageService productImageService;
     private final BookmarkService bookmarkService;
-    private final ReviewDetailsService reviewDetailsService;
+    private final ReviewService reviewService;
 
     // 모든 제품 조회
     @GetMapping
@@ -42,8 +42,7 @@ public class ProductController {
     @GetMapping("/search")
     public ResponseEntity<List<ProductDTO>> getProducts(@RequestParam("name") String name) {
         List<ProductDTO> products = productService.getProducts(name);
-        if (products.isEmpty())
-            return ResponseEntity.noContent().build(); // 204 No Content
+        if (products.isEmpty()) return ResponseEntity.noContent().build(); // 204 No Content
         return ResponseEntity.ok(products);
     }
 
@@ -51,11 +50,14 @@ public class ProductController {
     @GetMapping("/{proId}")
     public ResponseEntity<ProductDetails> getProductDetails(@PathVariable("proId") Long proId,
                                                             @RequestParam("userId") Long userId) {
-        ProductDetails productDetails = productService.newProductDetails(proId);
-        productDetails.setBookmark(bookmarkService.existsBookmark(proId, userId));
-        productDetails.setUserReview(reviewDetailsService.getReview(proId, userId));
-        productDetails.setReviews(reviewDetailsService.getPreviewReview(proId, userId));
-        return ResponseEntity.ok(productDetails);
+        try {
+            ProductDetails productDetails = productService.newProductDetails(proId);
+            productDetails.setBookmark(bookmarkService.existsBookmark(proId, userId));
+            productDetails.setReviews(reviewService.getPreviewReview(proId, userId));
+            return ResponseEntity.ok(productDetails);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 Not Found
+        }
     }
 
     // 제품 등록
@@ -68,7 +70,7 @@ public class ProductController {
                 return new ResponseEntity<>(HttpStatus.CONFLICT); // 409 Conflict
             String imgPath = productImageService.uploadProductImage(image);
             productService.saveProduct(product, imgPath);
-            return ResponseEntity.ok("Registration complete");
+            return ResponseEntity.noContent().build(); // 204 No Content
         } catch (IOException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR); // 500 Sever Error
         }
@@ -81,8 +83,8 @@ public class ProductController {
             Resource resource = productImageService.getImage(imgPath);
             if (!resource.exists() || !resource.isReadable())
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 Not Found
-            // MediaType mediaType = MediaType.parseMediaType("image/webp");
-            return ResponseEntity.ok().contentType(MediaType.ALL).body(resource);
+             MediaType mediaType = MediaType.parseMediaType("image/webp");
+            return ResponseEntity.ok().contentType(mediaType).body(resource);
         } catch (MalformedURLException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // 400 Bad Request
         }

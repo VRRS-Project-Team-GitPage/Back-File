@@ -15,12 +15,13 @@ public class Product {
     private String name; // 제품명
     private String imgPath; // 이미지 경로
     private String ingredients; // 원재료
+    private String reportNum; // 품목보고번호
 
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category; // 카테고리
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "veg_type_id")
     private VegetarianType vegType; // 채식유형
 

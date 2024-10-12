@@ -4,8 +4,8 @@ import com.shinhan.VRRS.dto.*;
 import com.shinhan.VRRS.entity.Product;
 import com.shinhan.VRRS.service.ProductService;
 import com.shinhan.VRRS.service.RecommendationService;
-import com.shinhan.VRRS.service.readingService.IngredientService;
-import com.shinhan.VRRS.service.readingService.OcrService;
+import com.shinhan.VRRS.service.IngredientService;
+import com.shinhan.VRRS.service.OcrService;
 import com.shinhan.VRRS.util.IngredientUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,6 +27,7 @@ public class IngredientCotroller {
     private final IngredientService ingredientService;
     private final RecommendationService recommendationService;
 
+    // 클로바 OCR 호출
     @PostMapping("/ocr")
     public ResponseEntity<OcrResponse> callOcr(@RequestParam("file") MultipartFile file) {
         OcrResponse processedText = new OcrResponse();
@@ -39,11 +40,11 @@ public class IngredientCotroller {
 
             processedText = ocrService.parseJson(ocrResponse); // 응답 텍스트 전처리
 
-            // 등록 제품인지 판단
-            Product product = productService.getProduct(processedText.getProductName());
-            if (product == null) processedText.setProductName(null);
+            // 등록 제품 판단
+            Product product = productService.getProduct(processedText.getReportNum());
+            if (product != null) processedText.setExists(true);
 
-            // 괄호 짝이 맞는지 확인
+            // 괄호 검사
             if (!processedText.isFullBracket())
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(processedText); // 400 Bad Request
             return ResponseEntity.ok(processedText);
@@ -52,32 +53,37 @@ public class IngredientCotroller {
         }
     }
 
+    // 제품 판독 및 추천
     @PostMapping("/reading")
     public ResponseEntity<IngredientResponse> checkIngredients(@RequestBody IngredientRequest request) {
-        Integer userVegTypeId = request.getVegTypeId();  // 사용자 채식유형
-        Integer proVegTypeId = null;  // 제품 채식유형
-
         List<String> ingredients;
 
+        Integer userVegTypeId = request.getVegTypeId();
+        Integer proVegTypeId = null;
+
         // 등록 제품 처리
-        if (request.getProductName() != null) {
-            Product product = productService.getProduct(request.getProductName());
+        if (request.isExists()) {
+            Product product = productService.getProduct(request.getReportNum());
             proVegTypeId = product.getVegType().getId();
             ingredients = IngredientUtil.splitByCommaOutsideBrackets(product.getIngredients());
-        } else if (!request.isFullBracket()) {
-            ingredients = IngredientUtil.extractCleanIngredient(Collections.singletonList(request.getIngredients()));
-            if (ingredients == null)
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);  // 400 Bad Request
-            ingredients = IngredientUtil.splitByCommaOutsideBrackets(ingredients.toString());
         } else {
-            ingredients = IngredientUtil.splitByCommaOutsideBrackets(request.getIngredients());
+            List<String> ingredientList = Collections.singletonList(request.getIngredients());
+            ingredientList = IngredientUtil.processIngredients(ingredientList);
+
+            // 괄호 검사
+            if (ingredientList == null) return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // 400 Bad Request
+
+            // 불필요한 문자 제거
+            if (!request.isFullBracket())
+                ingredientList = IngredientUtil.extractCleanIngredient(ingredientList);
+            ingredients = IngredientUtil.splitByCommaOutsideBrackets(ingredientList.toString());
         }
 
         // 제품 판독
         IngredientResponse result = ingredientService.checkConsumable(ingredients, userVegTypeId, proVegTypeId);
 
-        // 판독 기반 추천
-        List<ProductDTO> products = recommendationService.recommendReadingBased(userVegTypeId, result.getConsumables().toString())
+        // 유사품 추천
+        List<ProductDTO> products = recommendationService.recommendByReading(userVegTypeId, result.getConsumables().toString())
                 .stream().map(ProductDTO::new).toList();
         result.setRecommendations(products);
         return ResponseEntity.ok(result);

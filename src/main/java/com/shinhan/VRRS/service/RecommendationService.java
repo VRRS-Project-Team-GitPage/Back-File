@@ -3,7 +3,11 @@ package com.shinhan.VRRS.service;
 import com.shinhan.VRRS.dto.ProductDTO;
 import com.shinhan.VRRS.dto.RankResponse;
 import com.shinhan.VRRS.entity.Product;
+import com.shinhan.VRRS.entity.User;
+import com.shinhan.VRRS.entity.VegetarianType;
 import com.shinhan.VRRS.repository.ProductRepository;
+import com.shinhan.VRRS.repository.RecommendationRepository;
+import com.shinhan.VRRS.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,30 +19,70 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class RecommendationService {
-    private final ProductRepository productRepository;
+    private final RecommendationRepository recommendationRepository;
+    private final ReviewRepository reviewRepository;
 
     public RankResponse getRank(Integer vegTypeId) {
         Pageable pageable = PageRequest.of(0, 10);
         // 전체 채식 유형
-        List<ProductDTO> totalRank = productRepository.findByTotalRank(pageable)
+        List<ProductDTO> totalRank = recommendationRepository.findByTotalRank(pageable)
                 .stream().map(ProductDTO::new).toList();
 
         // 특정 채식 유형
         List<Integer> vegTypeIds = new ArrayList<>();
         if (vegTypeId != 3) for (int i = 1; i<= vegTypeId; i++) vegTypeIds.add(i);
         else vegTypeIds = Arrays.asList(1, 3); // 오보 베지테리언 처리
-        List<ProductDTO> vegTypeRank =  productRepository.findByVegTypeRank(vegTypeIds, pageable)
+        List<ProductDTO> vegTypeRank =  recommendationRepository.findByVegTypeRank(vegTypeIds, pageable)
                 .stream().map(ProductDTO::new).toList();
 
         return new RankResponse(totalRank, vegTypeRank);
     }
 
-    public List<Product> recommendReadingBased(Integer vegTypeId, String ingredients) {
+    // 사용자의 카테고리 선택 및 채식 유형에 따른 제품 추천
+    public List<ProductDTO> recommendByCategory(Integer categoryId, User user) {
+        Long userId = user.getId();
+        Integer vegTypeId = user.getVegType().getId();
+
+        // 채식유형 설정
+        List<Integer> vegTypeIds = new ArrayList<>();
+        if (vegTypeId != 3) for (int i = 1; i<= vegTypeId; i++) vegTypeIds.add(i);
+        else vegTypeIds = Arrays.asList(1, 3); // 오보 베지테리언 처리
+
+        // 비추천 제품 ID 검색
+        List<Long> dislikedProductIds = reviewRepository.findDislikedProductIdsByUserId(userId);
+
+        // 채식유형에 맞는 제품 검색 (비추천 제품 제외)
+        List<Product> categoryProducts = recommendationRepository.findByCategoryAndVegTypeInAndIdNotIn(categoryId, vegTypeIds, dislikedProductIds);
+
+        return new ArrayList<>(categoryProducts).stream().map(ProductDTO::new).toList();
+    }
+
+    // 키워드 기반 추천
+    public List<ProductDTO> recommendByKeyword(String keyword, User user) {
+        Long userId = user.getId();
+        Integer vegTypeId = user.getVegType().getId();
+
+        // 채식유형 설정
+        List<Integer> vegTypeIds = new ArrayList<>();
+        if (vegTypeId != 3) for (int i = 1; i<= vegTypeId; i++) vegTypeIds.add(i);
+        else vegTypeIds = Arrays.asList(1, 3); // 오보 베지테리언 처리
+
+        // 비추천한 제품 ID 검색
+        List<Long> dislikedProductIds = reviewRepository.findDislikedProductIdsByUserId(userId);
+
+        // 채식유형에 맞는 제품 검색 (비추천 제품 제외)
+        List<Product> keywordProducts = recommendationRepository.findByKeywordAndVegTypeInAndIdNotIn(keyword, vegTypeIds, dislikedProductIds);
+
+        return new ArrayList<>(keywordProducts).stream().map(ProductDTO::new).toList();
+    }
+
+    // 판독 기반 추천
+    public List<Product> recommendByReading(Integer vegTypeId, String ingredients) {
         List<Integer> vegTypeIds = new ArrayList<>();
         if (vegTypeId != 3) for (int i=1; i<=vegTypeId; i++) vegTypeIds.add(i);
         else vegTypeIds = Arrays.asList(1, 3); // 오보 베지테리언 처리
 
-        List<Product> allProducts = productRepository.findByCustomVegTypeId(vegTypeIds);
+        List<Product> allProducts = recommendationRepository.findByCustomVegTypeId(vegTypeIds);
         Set<String> selectedIngredients = new HashSet<>(parseIngredients(ingredients));
 
         Map<Product, Double> productSimilarityMap = new HashMap<>();

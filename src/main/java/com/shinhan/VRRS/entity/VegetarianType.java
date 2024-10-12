@@ -13,5 +13,6 @@ import lombok.Setter;
 public class VegetarianType {
     @Id
     private Integer id;
+
     private String name;
 }

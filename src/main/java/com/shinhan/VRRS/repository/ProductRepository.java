@@ -12,25 +12,15 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
-    Boolean existsByName(String name);
+    Boolean existsByReportNum(String reportNum);
 
     @Query("SELECT p FROM Product p WHERE REPLACE(p.name, ' ', '') LIKE %:name%")
     List<Product> findByCustomNameContaining(@Param("name") String name);
 
-    @Query("SELECT p FROM Product p WHERE REPLACE(p.name, ' ', '') = :name")
-    Optional<Product> findProductByNameIgnoringSpaces(@Param("name") String name);
-
-    @Query("SELECT p FROM Product p WHERE p.vegType.id IN :vegTypeIds")
-    List<Product> findByCustomVegTypeId(@Param("vegTypeIds") List<Integer> vegTypeIds);
+    Optional<Product> findByReportNum(String reportNum);
 
     @Query("SELECT p FROM Product p WHERE p.vegType.id IN :vegTypeIds")
     Slice<Product> findByCustomVegTypeId(@Param("vegTypeIds") List<Integer> vegTypeIds, Pageable pageable);
-
-    @Query("SELECT p FROM Product p ORDER BY (p.recCnt * 0.5 + p.bookmarkCnt) DESC")
-    List<Product> findByTotalRank(Pageable pageable);
-
-    @Query("SELECT p FROM Product p WHERE p.vegType.id IN :vegTypeIds ORDER BY (p.recCnt * 0.5 + p.bookmarkCnt) DESC")
-    List<Product> findByVegTypeRank(@Param("vegTypeIds") List<Integer> vegTypeIds, Pageable pageable);
 
     @Modifying
     @Query("UPDATE Product p SET p.recCnt = p.recCnt - 1 WHERE p.id = :proId")
@@ -47,4 +37,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Modifying
     @Query("UPDATE Product p SET p.bookmarkCnt = p.bookmarkCnt - 1 WHERE p.id = :proId")
     void decrementBookmarkCnt(@Param("proId") Long proId);
+
+    List<Product> findByCategoryId(Integer categoryId);
+
+    @Query("SELECT p FROM Product p WHERE p.id IN :proIds")
+    List<Product> findByIds(@Param("proIds") List<Long> proIds);
 }

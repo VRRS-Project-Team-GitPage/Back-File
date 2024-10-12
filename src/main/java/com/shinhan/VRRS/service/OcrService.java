@@ -1,8 +1,9 @@
-package com.shinhan.VRRS.service.readingService;
+package com.shinhan.VRRS.service;
 
-import com.nimbusds.jose.shaded.gson.Gson;
-import com.nimbusds.jose.shaded.gson.JsonArray;
-import com.nimbusds.jose.shaded.gson.JsonObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.shinhan.VRRS.dto.OcrResponse;
 import com.shinhan.VRRS.util.IngredientUtil;
 import com.shinhan.VRRS.util.JsonUtil;
@@ -17,8 +18,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
 
-import static com.shinhan.VRRS.util.IngredientUtil.*;
-
 @Service
 public class OcrService {
     @Value("${naver.clova.api.url}")
@@ -28,7 +27,7 @@ public class OcrService {
     private String secretKey;
 
     public StringBuffer callOcr(MultipartFile file) throws IOException {
-        String format = file.getContentType().split("/")[1]; // 포멧
+        String format = Objects.requireNonNull(file.getContentType()).split("/")[1]; // 포멧
         byte[] imageBytes = file.getBytes(); // 파일 -> 바이트 배열
 
         URL url = new URL(apiUrl);
@@ -74,18 +73,17 @@ public class OcrService {
     }
 
 //    public List<String> parseJson(StringBuffer response) {
-    public OcrResponse parseJson(String response) {
+    public OcrResponse parseJson(String response) throws JsonProcessingException {
         //json 파싱
-        Gson gson = new Gson();
-//        JsonObject jobj = gson.fromJson(response.toString(), JsonObject.class);
-        JsonObject jobj = gson.fromJson(response, JsonObject.class); // 테스트용
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jobj = objectMapper.readTree(response);
 
         //images 배열 -> obj 화
-        JsonArray jArray = (JsonArray) jobj.get("images");
-        JsonObject JSONObjImage = (JsonObject) jArray.get(0);
-        JsonArray s = (JsonArray) JSONObjImage.get("fields");
+        JsonNode jArray = jobj.get("images");
+        JsonNode JSONObjImage = jArray.get(0);
+        ArrayNode fields = (ArrayNode) JSONObjImage.get("fields");
 
-        List<Map<String, Object>> m = JsonUtil.getListMapFromJsonArray(s);
+        List<Map<String, Object>> m = JsonUtil.getListMapFromJsonArray(fields);
         List<String> textList = new ArrayList<>();
         List<Double> startCoords = new ArrayList<>(); // vertices 리스트 추가
         List<Double> endCoords = new ArrayList<>(); // vertices 리스트 추가
@@ -112,13 +110,15 @@ public class OcrService {
             }
         }
 
-        String productName = IngredientUtil.extractProductName(textList, startCoords, endCoords);
+        String reportNum = IngredientUtil.extractReportNum(textList);
         List<String> ingredients = IngredientUtil.extractIngredient(textList, startCoords, endCoords);
-        List<String> cleanIngredients = IngredientUtil.extractCleanIngredient(ingredients);
+        List<String> processedIngredients = IngredientUtil.processIngredients(ingredients);
 
         // 괄호 짝이 맞지 않으면 원본 원재료 리스트를 반환
-        if (cleanIngredients == null)
-            return new OcrResponse(productName, ingredients, false);
-        return new OcrResponse(productName, cleanIngredients, true);
+        if (processedIngredients == null)
+            return new OcrResponse(reportNum, ingredients, false);
+
+        List<String> cleanIngredients = IngredientUtil.extractCleanIngredient(processedIngredients);
+        return new OcrResponse(reportNum, cleanIngredients, true);
     }
 }

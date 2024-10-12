@@ -11,5 +11,6 @@ import lombok.Setter;
 public class Category {
     @Id
     private Integer id;
+
     private String name;
 }

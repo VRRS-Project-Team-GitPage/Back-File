@@ -10,13 +10,15 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class OcrResponse {
-    private String productName;
+    private String reportNum;
     private String ingredients;
-    private boolean isFullBracket;
+    private boolean exists;
+    private boolean fullBracket;
 
-    public OcrResponse(String productName, List<String> ingredients, boolean isFullBracket) {
-        this.productName = productName;
-        this.ingredients = String.join(", ", ingredients);
-        this.isFullBracket = isFullBracket;
+    public OcrResponse(String reportNum, List<String> ingredients, boolean fullBracket) {
+        this.reportNum = reportNum;
+        this.ingredients = ingredients.toString();
+        this.exists = false;
+        this.fullBracket = fullBracket;
     }
 }

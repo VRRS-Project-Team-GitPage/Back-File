@@ -2,6 +2,7 @@ package com.shinhan.VRRS.controller;
 
 import com.shinhan.VRRS.dto.*;
 import com.shinhan.VRRS.entity.User;
+import com.shinhan.VRRS.service.CustomUserDetails;
 import com.shinhan.VRRS.service.EmailService;
 import com.shinhan.VRRS.service.UserService;
 import com.shinhan.VRRS.util.JwtUtil;
@@ -12,11 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @CrossOrigin(origins = "*")
@@ -26,46 +24,44 @@ import java.util.Map;
 public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
-    private final UserDetailsService userDetailsService;
     private final UserService userService;
     private final EmailService mailService;
 
     // 회원가입
     @PostMapping("/join")
-    public ResponseEntity<String> join(@RequestBody UserDTO userDto) {
+    public ResponseEntity<Void> join(@RequestBody UserDTO userDto) {
         userService.join(userDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Join successful"); // 201 Created
+        return ResponseEntity.status(HttpStatus.CREATED).build(); // 201 Created
     }
 
     // 로그인
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginDto) {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword())
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
             );
         } catch (BadCredentialsException e) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED); // 401 Unauthorized
         }
 
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(loginDto.getUsername());
+        final CustomUserDetails userDetails = userService.loadUserByUsername(request.getUsername());
         final String jwt = jwtUtil.generateToken(userDetails.getUsername());
-        final User user = userService.getUserByUsername(userDetails.getUsername());
-        return ResponseEntity.ok(new LoginResponse(jwt, user));
+        return ResponseEntity.ok(new LoginResponse(jwt, userDetails));
     }
 
     // 아이디 찾기
     @PostMapping("/find/username")
-    public ResponseEntity<Map<String, String>> getUsername(@RequestParam("email") String email) {
-        User user = userService.getUserByEmail(email);
+    public ResponseEntity<Map<String, String>> getUsername(@RequestBody UserInfoRequest request) {
+        User user = userService.getUserByEmail(request.getUserInfo());
         if (user == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 Not Found
         return ResponseEntity.ok(Map.of("username", user.getUsername()));
     }
 
     // 비밀번호 찾기
     @PostMapping("/find/password")
-    public ResponseEntity<String> sendPasswordMail(@RequestParam("email") String email) {
-        User user = userService.getUserByEmail(email);
+    public ResponseEntity<Void> sendPasswordMail(@RequestBody UserInfoRequest request) {
+        User user = userService.getUserByEmail(request.getUserInfo());
         if (user == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 Not Found
 
         EmailMessage emailMessage = EmailMessage.builder()
@@ -76,7 +72,7 @@ public class AuthController {
         try {
             String code = mailService.sendMail(emailMessage, "password");
             userService.setTempPassword(emailMessage.getTo(), code);
-            return ResponseEntity.ok("Send temporary password");
+            return ResponseEntity.noContent().build(); // 204 No Content
         } catch (MessagingException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR); // 500 Server Error
         }
@@ -84,9 +80,13 @@ public class AuthController {
 
     // 인증 메일 전송
     @PostMapping("/email")
-    public ResponseEntity<AuthCode> sendJoinMail(@RequestParam("email") String email) {
+    public ResponseEntity<AuthCode> sendJoinMail(@RequestBody UserInfoRequest request) {
+        // 이메일 중복 확인
+        if (userService.existsEmail(request.getUserInfo()))
+            return new ResponseEntity<>(HttpStatus.CONFLICT); // 409 Conflict
+
         EmailMessage emailMessage = EmailMessage.builder()
-                                                .to(email)
+                                                .to(request.getUserInfo())
                                                 .subject("[채식어디] 이메일 인증 코드 발송")
                                                 .build();
 
@@ -98,15 +98,9 @@ public class AuthController {
         }
     }
 
-    // 이메일 중복 확인
-    @PostMapping("/check/email")
-    public ResponseEntity<Boolean> checkEmail(@RequestParam("email") String email) {
-        return ResponseEntity.ok(userService.existsEmail(email));
-    }
-
     // 아이디 중복 확인
     @PostMapping("/check/username")
-    public ResponseEntity<Boolean> checkUsername(@RequestParam("username") String username) {
-        return ResponseEntity.ok(userService.existsUsername(username));
+    public ResponseEntity<Boolean> checkUsername(@RequestBody UserInfoRequest request) {
+        return ResponseEntity.ok(userService.existsUsername(request.getUserInfo()));
     }
 }

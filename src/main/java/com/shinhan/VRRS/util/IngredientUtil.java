@@ -27,7 +27,7 @@ public class IngredientUtil {
 
         for (String text : textList) {
             // 1. 일반 키워드 확인
-            if (isKeyword(text) || (text.contains("원재료") || text.contains("원료"))) {
+            if (isKeyword(text) || (text.contains("재료") || text.contains("원료"))) {
                 if (isExtractingReportNumber) break;
                 continue;
             }
@@ -58,6 +58,7 @@ public class IngredientUtil {
 
         List<String> ingredients = new ArrayList<>();  // 원재료 리스트
         List<String> tempIngredients = new ArrayList<>();  // 임시 원재료 리스트
+        List<String> deleteIngredients = new ArrayList<>();  // 삭제 원재료 리스트
         StringBuilder tempIngredient = new StringBuilder();  // 원재료를 저장할 변수
         StringBuilder allergy = new StringBuilder();  // 알레르기를 저장할 변수
 
@@ -114,7 +115,8 @@ public class IngredientUtil {
                     // 원재료 추출 중이고 원재료 리스트가 비어있지 않으면 종료
                     if (isExtractingIngredients) {
                         if (!tempIngredients.isEmpty()) {
-                            if (!isSimpleShape) tempIngredient.setLength(0);
+                            if (!isSimpleShape)
+                                tempIngredient.setLength(0);
                             break;
                         }
                         isExtractingIngredients = false;
@@ -125,6 +127,7 @@ public class IngredientUtil {
                         continue;
                     }
                     // 다른 키워드가 나왔을 때 임시 원재료 리스트 삭제
+                    deleteIngredients = tempIngredients;
                     tempIngredients.clear();
                     isStartKeyword = false;
                     isSkip = true;
@@ -133,7 +136,7 @@ public class IngredientUtil {
             }
 
             // 3. "원재료" 또는 "원료" 키워드 확인 (추출 시작)
-            if (!isExtractingIngredients && (text.contains("원재료") || text.contains("원료"))) {
+            if (!isExtractingIngredients && (text.contains("재료") || text.contains("원료"))) {
                 ingredientsX = startX;
 
                 // 특수문자가 포함되면 심플 형태로 판단
@@ -222,6 +225,10 @@ public class IngredientUtil {
         if (!tempIngredient.isEmpty())
             tempIngredients.add(tempIngredient.toString());
 
+        // 원재료명 키워드가 없는 경우 처리
+        if (tempIngredients.isEmpty())
+            tempIngredients = deleteIngredients;
+
         // 한 줄로 변경
         for (String ingredient : tempIngredients) {
             if (ingredients.isEmpty() || isIngredientSeparator(ingredient)) {
@@ -272,7 +279,58 @@ public class IngredientUtil {
             }
         }
 
-        return removeDuplicates(cleanedIngredients);  // 중복 제거
+        return removeDuplicates(cleanedIngredients); // 중복 제거
+    }
+
+    // 괄호 처리 메서드
+    public static List<String> processIngredients(List<String> ingredients) {
+        for (int i = 0; i < ingredients.size(); i++) {
+            String text = ingredients.get(i);
+
+            if (text.matches(".*[\\[\\]{}].*")) {
+                text = text.replace("{", "[").replace("}", "]");
+                text = fixBrackets(text);
+            }
+            if (!areBracketsBalanced(text)) return null;
+
+            ingredients.set(i, text);
+        }
+        return ingredients; // 처리된 원재료 리스트 반환
+    }
+
+    // 문자열 분리 메서드
+    public static List<String> splitByCommaOutsideBrackets(String input) {
+        List<String> result = new ArrayList<>();
+        StringBuilder currentPart = new StringBuilder();
+        int openParenCount = 0; // 소괄호의 개수를 추적
+        int openSquareBracketCount = 0; // 대괄호의 개수를 추적
+
+        for (int i = 0; i < input.length(); i++) {
+            char ch = input.charAt(i);
+
+            // 괄호의 열림과 닫힘을 추적
+            if (ch == '(')
+                openParenCount++;
+            else if (ch == ')')
+                openParenCount--;
+            else if (ch == '[')
+                openSquareBracketCount++;
+            else if (ch == ']')
+                openSquareBracketCount--;
+
+            // 콤마를 만났을 때 괄호가 모두 닫혀있으면 분리
+            if (ch == ',' && openParenCount == 0 && openSquareBracketCount == 0) {
+                result.add(currentPart.toString().trim());
+                currentPart.setLength(0); // StringBuilder 초기화
+            } else {
+                currentPart.append(ch);
+            }
+        }
+
+        // 마지막 부분 추가
+        if (!currentPart.isEmpty())
+            result.add(currentPart.toString().trim());
+        return result;
     }
 
     // 일반 키워드 확인 메서드 (제품명, 식품유형 등)
@@ -309,24 +367,8 @@ public class IngredientUtil {
         return INGREDIENT_SEPARATOR.matcher(input).find();
     }
 
-    // 괄호 처리 메서드
-    public static List<String> processIngredients(List<String> ingredients) {
-        for (int i = 0; i < ingredients.size(); i++) {
-            String text = ingredients.get(i);
-
-            if (text.matches(".*[\\[\\]{}].*")) {
-                text = text.replace("{", "[").replace("}", "]");
-                text = fixBrackets(text);
-            }
-
-            if (!areBracketsBalanced(text)) return null;
-            ingredients.set(i, text);
-        }
-        return ingredients; // 처리된 원재료 리스트 반환
-    }
-
     // 괄호 짝이 맞는지 확인하는 메서드
-    public static boolean areBracketsBalanced(String input) {
+    private static boolean areBracketsBalanced(String input) {
         Stack<Character> stack = new Stack<>();
         for (char ch : input.toCharArray()) {
             if (ch == '(' || ch == '[') {
@@ -341,13 +383,13 @@ public class IngredientUtil {
     }
 
     // 열린 괄호와 닫힌 괄호가 짝이 맞는지 확인하는 메서드
-    public static boolean isMatchingPair(char openBracket, char closeBracket) {
+    private static boolean isMatchingPair(char openBracket, char closeBracket) {
         return (openBracket == '(' && closeBracket == ')') ||
-                (openBracket == '[' && closeBracket == ']');
+               (openBracket == '[' && closeBracket == ']');
     }
 
     // 괄호 수정 메서드
-    public static String fixBrackets(String input) {
+    private static String fixBrackets(String input) {
         char[] result = new char[input.length()];
         int lastOpenIndex = -1;
         boolean lastWasOpen = false;  // 이전 문자가 여는 소괄호였는지 추적
@@ -381,19 +423,15 @@ public class IngredientUtil {
     }
 
     // 대괄호 처리 메서드
-    public static String modifyIngredients(String ingredients) {
+    private static String modifyIngredients(String ingredients) {
         // 대괄호 개수 및 소괄호 포함 여부 확인
         int openBrackets = 0;
         boolean hasParentheses = ingredients.contains("(");
 
         // 중첩된 대괄호 체크
-        for (char ch : ingredients.toCharArray()) {
-            if (ch == '[') {
+        for (char ch : ingredients.toCharArray())
+            if (ch == '[')
                 openBrackets++;
-            } else if (ch == ']') {
-                openBrackets--;
-            }
-        }
 
         // 대괄호가 중첩된 경우
         if (openBrackets > 1) {
@@ -407,50 +445,15 @@ public class IngredientUtil {
         return ingredients; // 어떤 조건에도 해당하지 않는 경우 원본 반환
     }
 
-    // 문자열 분리 메서드
-    public static List<String> splitByCommaOutsideBrackets(String input) {
-        List<String> result = new ArrayList<>();
-        StringBuilder currentPart = new StringBuilder();
-        int openParenCount = 0; // 소괄호의 개수를 추적
-        int openSquareBracketCount = 0; // 대괄호의 개수를 추적
-
-        for (int i = 0; i < input.length(); i++) {
-            char ch = input.charAt(i);
-
-            // 괄호의 열림과 닫힘을 추적
-            if (ch == '(') {
-                openParenCount++;
-            } else if (ch == ')') {
-                openParenCount--;
-            } else if (ch == '[') {
-                openSquareBracketCount++;
-            } else if (ch == ']') {
-                openSquareBracketCount--;
-            }
-
-            // 콤마를 만났을 때 괄호가 모두 닫혀있으면 분리
-            if (ch == ',' && openParenCount == 0 && openSquareBracketCount == 0) {
-                result.add(currentPart.toString().trim());
-                currentPart.setLength(0); // StringBuilder 초기화
-            } else {
-                currentPart.append(ch);
-            }
-        }
-
-        // 마지막 부분 추가
-        if (!currentPart.isEmpty()) result.add(currentPart.toString().trim());
-        return result;
-    }
-
     // 불필요한 문자 제거 메서드
-    public static String removePercentagesAndBrackets(String input) {
+    private static String removePercentagesAndBrackets(String input) {
         return input.replaceAll("\\(\\d+\\)", "") // 숫자만 있는 괄호 제거
                 .replaceAll("\\d+\\.\\d*%|\\d+%", "") // 함량 제거
                 .replaceAll("[^\\p{IsHangul}\\w\\s()\\[\\],:/-]", ""); // 불필요한 특수문자 제거
     }
 
     // 원산지 제거 함수
-    public static String removeOrigin(String input) {
+    private static String removeOrigin(String input) {
         // 배열을 정규식으로 변환하여 국가명 제거
         String countryPattern = String.join("|", COUNTRIES);
 
@@ -464,8 +467,8 @@ public class IngredientUtil {
                 .replaceAll("[:/]", "");  // 남은 특수문자 제거
     }
 
-    // 중복 항목 제거 함수
-    public static List<String> removeDuplicates(List<String> input) {
+    // 중복 제거 함수 (순서 유지)
+    private static List<String> removeDuplicates(List<String> input) {
         return new ArrayList<>(new LinkedHashSet<>(input));
     }
 }

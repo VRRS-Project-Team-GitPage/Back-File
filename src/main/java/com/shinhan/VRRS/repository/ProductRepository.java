@@ -1,8 +1,7 @@
 package com.shinhan.VRRS.repository;
 
 import com.shinhan.VRRS.entity.Product;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -14,13 +13,15 @@ import java.util.Optional;
 public interface ProductRepository extends JpaRepository<Product, Long> {
     Boolean existsByReportNum(String reportNum);
 
-    @Query("SELECT p FROM Product p WHERE REPLACE(p.name, ' ', '') LIKE %:name%")
-    List<Product> findByCustomNameContaining(@Param("name") String name);
+    Boolean existsByName(String name);
 
     Optional<Product> findByReportNum(String reportNum);
 
+    @Query("SELECT p FROM Product p WHERE REPLACE(p.name, ' ', '') LIKE %:name%")
+    List<Product> findByCustomNameContaining(@Param("name") String name);
+
     @Query("SELECT p FROM Product p WHERE p.vegType.id IN :vegTypeIds")
-    Slice<Product> findByCustomVegTypeId(@Param("vegTypeIds") List<Integer> vegTypeIds, Pageable pageable);
+    List<Product> findByCustomVegTypeId(@Param("vegTypeIds") List<Integer> vegTypeIds, Sort sort);
 
     @Modifying
     @Query("UPDATE Product p SET p.recCnt = p.recCnt - 1 WHERE p.id = :proId")
@@ -37,9 +38,4 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Modifying
     @Query("UPDATE Product p SET p.bookmarkCnt = p.bookmarkCnt - 1 WHERE p.id = :proId")
     void decrementBookmarkCnt(@Param("proId") Long proId);
-
-    List<Product> findByCategoryId(Integer categoryId);
-
-    @Query("SELECT p FROM Product p WHERE p.id IN :proIds")
-    List<Product> findByIds(@Param("proIds") List<Long> proIds);
 }

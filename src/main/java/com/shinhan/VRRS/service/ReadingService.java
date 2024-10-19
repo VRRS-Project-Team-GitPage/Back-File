@@ -9,7 +9,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-public class IngredientService {
+public class ReadingService {
     private final IngredientRepository ingredientRepository;
 
     public IngredientResponse checkConsumable(List<String> ingredients, Integer userVegTypeId, Integer proVegTypeId) {
@@ -33,9 +33,10 @@ public class IngredientService {
         for (String ingredient : ingredients) {
             // 괄호 밖의 원재료 먼저 처리
             String mainIngredient = getMainIngredient(ingredient);
-            Integer vegTypeId = ingredientRepository.findVegTypeByIngredientName(mainIngredient).orElse(null);
+            List<Integer> vegTypes = ingredientRepository.findVegTypeByIngredientName(mainIngredient);
+            Integer vegType = vegTypes.isEmpty() ? null : vegTypes.get(0);
 
-            if (vegTypeId == null) {
+            if (vegType == null) {
                 // 괄호 안 원재료 확인
                 List<String> subIngredients = extractBracketContent(ingredient);
                 boolean isSubStart = true;
@@ -43,7 +44,8 @@ public class IngredientService {
                 for (String subIngredient : subIngredients) {
                     // 괄호 밖의 원재료 먼저 처리
                     String subMainIngredient = getMainIngredient(ingredient);
-                    Integer subVegType = ingredientRepository.findVegTypeByIngredientName(subMainIngredient).orElse(null);
+                    List<Integer> subVegTypes = ingredientRepository.findVegTypeByIngredientName(subMainIngredient);
+                    Integer subVegType = subVegTypes.isEmpty() ? null : subVegTypes.get(0);
 
                     if (subVegType == null) {
                         // 괄호 안 세부 원재료가 있는 경우 처리
@@ -51,7 +53,8 @@ public class IngredientService {
                         boolean isDetailStart = true;
 
                         for (String detailedIngredient : detailedIngredients) {
-                            Integer detailedVegType = ingredientRepository.findVegTypeByIngredientName(detailedIngredient).orElse(null);
+                            List<Integer> detailedVegTypes = ingredientRepository.findVegTypeByIngredientName(detailedIngredient);
+                            Integer detailedVegType = detailedVegTypes.isEmpty() ? null : detailedVegTypes.get(0);
 
                             if (detailedVegType != null && detailedVegType == 7) {
                                 subVegType = 7;
@@ -79,34 +82,34 @@ public class IngredientService {
                     }
 
                     if (subVegType != null && subVegType == 7) {
-                        vegTypeId = 7;
+                        vegType = 7;
                         break;
                     }
 
-                    if (vegTypeId == null) {
+                    if (vegType == null) {
                         if (isSubStart) {
-                            vegTypeId = subVegType;
+                            vegType = subVegType;
                             isSubStart = false;
                         } else if (!vegTypeIds.contains(subVegType)) {
-                            vegTypeId = subVegType;
+                            vegType = subVegType;
                             hasNull = true;
                         }
                     } else if (subVegType == null) {
-                        if (vegTypeIds.contains(vegTypeId))
-                            vegTypeId = null;
+                        if (vegTypeIds.contains(vegType))
+                            vegType = null;
                         hasNull = true;
-                    } else if ((subVegType == 2 && vegTypeId == 3) || (subVegType == 3 && vegTypeId == 2)) {
-                        vegTypeId = 4;
+                    } else if ((subVegType == 2 && vegType == 3) || (subVegType == 3 && vegType == 2)) {
+                        vegType = 4;
                     } else {
-                        vegTypeId = Math.max(vegTypeId, subVegType);
+                        vegType = Math.max(vegType, subVegType);
                     }
                 }
             }
 
             // 리스트 삽입
-            if (vegTypeId == null)
+            if (vegType == null)
                 unidentifiables.add(ingredient);
-            else if (vegTypeIds.contains(vegTypeId))
+            else if (vegTypeIds.contains(vegType))
                 consumables.add(ingredient);
             else
                 nonConsumables.add(ingredient);
@@ -116,17 +119,17 @@ public class IngredientService {
 
             if (finalVegTypeId == null) {
                 if (isStart) {
-                    finalVegTypeId = vegTypeId;
+                    finalVegTypeId = vegType;
                     isStart = false;
-                } else if (vegTypeId != null && vegTypeId == 7) {
+                } else if (vegType != null && vegType == 7) {
                     finalVegTypeId = 7;
                 }
-            } else if (vegTypeId == null) {
+            } else if (vegType == null) {
                 finalVegTypeId = null;
-            } else if ((vegTypeId == 2 && finalVegTypeId == 3) || (vegTypeId == 3 && finalVegTypeId == 2)) {
+            } else if ((vegType == 2 && finalVegTypeId == 3) || (vegType == 3 && finalVegTypeId == 2)) {
                 finalVegTypeId = 4;
             } else {
-                finalVegTypeId = Math.max(finalVegTypeId, vegTypeId);
+                finalVegTypeId = Math.max(finalVegTypeId, vegType);
             }
         }
 

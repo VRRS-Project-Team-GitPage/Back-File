@@ -10,8 +10,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Setter
-@Getter
+@Setter @Getter
 @NoArgsConstructor
 @IdClass(CompositePK.class)
 public class Bookmark {
@@ -19,7 +18,6 @@ public class Bookmark {
     private Long proId;
     @Id
     private Long userId;
-
     private LocalDateTime date;
 
     public Bookmark(Long proId, Long userId) {

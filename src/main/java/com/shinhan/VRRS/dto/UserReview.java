@@ -8,8 +8,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
+@Getter @Setter
 public class UserReview {
     private Long proId;
     private String proName;

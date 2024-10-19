@@ -17,7 +17,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
-    private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final VegetarianTypeRepository vegTypeRepository;
@@ -45,22 +44,16 @@ public class UserService implements UserDetailsService {
         return userRepository.findByUsername(username).orElse(null);
     }
 
+    // 토큰으로 사용자 조회
     public User getUserFromJwt(String jwt) {
         String jwtToken = jwt.substring(7); // 'Bearer ' 제거
-        String username = jwtUtil.extractUsername(jwtToken); // 아이디 추출
+        String username = JwtUtil.extractUsername(jwtToken); // 아이디 추출
         return getUserByUsername(username); // 사용자 정보 반환
     }
 
     @Transactional
     public void setPassword(User user, String password) {
         user.setPassword(passwordEncoder.encode(password));
-    }
-
-    @Transactional
-    public void setTempPassword(String to, String code) {
-        User user = userRepository.findByEmail(to).orElseThrow(NullPointerException::new);
-        user.setPassword(passwordEncoder.encode(code));
-        userRepository.save(user);
     }
 
     @Transactional

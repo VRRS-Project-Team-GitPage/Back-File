@@ -25,6 +25,24 @@ public class BookmarkService {
         return bookmarkRepository.existsById(id);
     }
 
+    // 북마크한 제품 목록 불러오기
+    public List<ProductDTO> getBookmarks(Long userId) {
+        // 북마크 조회 및 정렬
+        List<Bookmark> bookmarks = bookmarkRepository.findByUserIdOrderByDateAsc(userId);
+
+        // proId 추출
+        List<Long> proIds = bookmarks.stream()
+                .map(Bookmark::getProId)
+                .collect(Collectors.toList());
+
+        // 제품 조회
+        List<Product> products = productRepository.findAllById(proIds);
+
+        return products.stream()
+                .map(ProductDTO::new)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public void saveBookmark(Long proId, Long userId) {
         CompositePK id = new CompositePK(proId, userId);
@@ -54,30 +72,5 @@ public class BookmarkService {
         } else {
             throw new RuntimeException("Bookmark not found.");
         }
-    }
-
-    // 북마크한 제품 목록 불러오기
-    public List<ProductDTO> getBookmarks(Long userId, String sortOrder) {
-        Sort sort = Sort.by("date");
-        if ("desc".equalsIgnoreCase(sortOrder))
-            sort = sort.descending();
-        else
-            sort = sort.ascending();
-
-        // Bookmark에서 userId로 필터링하고 date로 정렬
-        List<Bookmark> bookmarks = bookmarkRepository.findByUserId(userId, sort);
-
-        // Bookmark에서 productId 추출
-        List<Long> productIds = bookmarks.stream()
-                .map(Bookmark::getProId)
-                .collect(Collectors.toList());
-
-        // Product 테이블에서 productIds로 조회
-        List<Product> products = productRepository.findAllById(productIds);
-
-        // Product를 ProductDTO로 변환
-        return products.stream()
-                .map(ProductDTO::new)
-                .collect(Collectors.toList());
     }
 }

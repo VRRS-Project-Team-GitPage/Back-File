@@ -6,8 +6,7 @@ import lombok.Setter;
 
 import java.util.List;
 
-@Getter
-@Setter
+@Getter @Setter
 @NoArgsConstructor
 public class OcrResponse {
     private String reportNum;

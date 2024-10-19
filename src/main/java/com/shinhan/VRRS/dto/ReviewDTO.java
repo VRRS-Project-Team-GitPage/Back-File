@@ -9,8 +9,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
+@Getter @Setter
 public class ReviewDTO {
     private String nickname; // 닉네임
     private VegetarianType vegType; // 채식 유형

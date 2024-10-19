@@ -15,5 +15,5 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, CompositePK>
     @Query("SELECT b.proId FROM Bookmark b WHERE b.userId = :userId")
     List<Long> findProIdsByUserId(@Param("userId") Long userId);
 
-    List<Bookmark> findByUserId(Long userId, Sort sort);
+    List<Bookmark> findByUserIdOrderByDateAsc(Long userId);
 }

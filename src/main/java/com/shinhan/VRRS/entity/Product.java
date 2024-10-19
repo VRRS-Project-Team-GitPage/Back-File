@@ -5,13 +5,11 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Getter
-@Setter
+@Getter @Setter
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String name; // 제품명
     private String imgPath; // 이미지 경로
     private String ingredients; // 원재료

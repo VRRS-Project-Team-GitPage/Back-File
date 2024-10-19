@@ -1,17 +1,15 @@
 package com.shinhan.VRRS.dto;
 
-import com.shinhan.VRRS.entity.Product;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
 
-@Getter
-@Setter
+@Getter @Setter
 public class IngredientResponse {
+    private Long proId;
     private Integer vegTypeId;
-
+    private String reportNum;
     private String ingredients;
     private List<String> consumables;
     private List<String> nonConsumables;

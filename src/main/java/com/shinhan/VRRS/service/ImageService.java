@@ -2,6 +2,7 @@ package com.shinhan.VRRS.service;
 
 import com.sksamuel.scrimage.ImmutableImage;
 import com.sksamuel.scrimage.webp.WebpWriter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -16,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class ImageService {
     @Value("${file.upload-dir}")
@@ -37,7 +39,8 @@ public class ImageService {
         File webpFile = new File(dirPath.toString(), imgName);
         ImmutableImage.loader().fromFile(originalFile).output(WebpWriter.DEFAULT, webpFile);
 
-        originalFile.delete(); // 임시 파일 삭제
+        if (!originalFile.delete())
+            log.error("파일 삭제에 실패했습니다: {}", originalFile.getAbsolutePath());
 
         return dbImgPath;
     }

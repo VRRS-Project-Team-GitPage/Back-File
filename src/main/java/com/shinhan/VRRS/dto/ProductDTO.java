@@ -1,13 +1,11 @@
 package com.shinhan.VRRS.dto;
 
-import com.shinhan.VRRS.entity.Category;
 import com.shinhan.VRRS.entity.Product;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-@Getter
-@Setter
+@Getter @Setter
 public class ProductDTO {
     private Long id;
     private String name;

@@ -11,8 +11,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Getter
-@Setter
+@Getter @Setter
 @NoArgsConstructor
 @IdClass(CompositePK.class)
 public class Review {
@@ -20,7 +19,6 @@ public class Review {
     private Long proId;
     @Id
     private Long userId;
-
     private String content; // 리뷰 내용
     private boolean isRec; // 추천 여부
     private boolean isChange; // 수정 여부

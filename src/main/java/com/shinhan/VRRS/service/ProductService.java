@@ -12,9 +12,7 @@ import com.shinhan.VRRS.repository.CategoryRepository;
 import com.shinhan.VRRS.repository.ProductRepository;
 import com.shinhan.VRRS.repository.VegetarianTypeRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,15 +27,19 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final VegetarianTypeRepository vegTypeRepository;
 
-    public Slice<ProductDTO> getAllProduct(Integer vegTypeId, Pageable pageable) {
+    public List<ProductDTO> getAllProduct(Integer vegTypeId, String sortOrder) {
+        Sort sort = Sort.by("id");
+        if ("recCnt".equals(sortOrder))
+            sort = Sort.by("recCnt").descending();
+
         // 전체 채식유형
-        if (vegTypeId == 6) return productRepository.findAll(pageable).map(ProductDTO::new);
+        if (vegTypeId == 6) return productRepository.findAll(sort).stream().map(ProductDTO::new).toList();
 
         // 특정 채식유형
         List<Integer> vegTypeIds = new ArrayList<>();
         if (vegTypeId != 3) for (int i=1; i<=vegTypeId; i++) vegTypeIds.add(i);
         else vegTypeIds = Arrays.asList(1, 3); // 오보 베지테리언 처리
-        return productRepository.findByCustomVegTypeId(vegTypeIds, pageable).map(ProductDTO::new);
+        return productRepository.findByCustomVegTypeId(vegTypeIds, sort).stream().map(ProductDTO::new).toList();
     }
 
     public List<ProductDTO> getProducts(String name) {
@@ -65,6 +67,10 @@ public class ProductService {
         Integer categoryId = jsonNode.path("categoryId").asInt();
         Integer vegTypeId = jsonNode.path("vegTypeId").asInt();
 
+        // 필수 필드 검증
+        if (name == null || ingredients == null || categoryId < 1 || categoryId > 4 || vegTypeId < 1 || vegTypeId > 6)
+            throw new IllegalArgumentException();
+
         // Product 객체 생성
         Product product = new Product();
         product.setName(name);
@@ -72,7 +78,10 @@ public class ProductService {
         product.setReportNum(reportNum);
 
         // 제품 중복 확인
-        if (productRepository.existsByReportNum(product.getReportNum())) return null;
+        if (product.getReportNum() != null)
+            if (productRepository.existsByReportNum(product.getReportNum())) return null;
+        else
+            if (productRepository.existsByName(product.getName())) return null; // 수입 제품 처리
 
         // 외래 키로 참조되는 엔티티 조회
         Category category = categoryRepository.findById(categoryId).orElse(null);
@@ -87,13 +96,6 @@ public class ProductService {
 
     public ProductDetails newProductDetails(Long id) {
         return productRepository.findById(id).map(ProductDetails::new)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
-    }
-
-    // 캐싱 적용 (자주 조회되는 데이터를 메모리에 저장하고 일정 시간 동안 캐시된 데이터를 반환함으로써 DB 요청을 줄일 수 있음)
-    @Cacheable(value = "productReviewCounts", key = "#proId")
-    public Product getProductReviewCounts(Long proId) {
-        return productRepository.findById(proId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
     }
 }

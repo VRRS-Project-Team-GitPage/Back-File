@@ -18,14 +18,14 @@ public class EmailService {
     private final JavaMailSender javaMailSender;
     private final SpringTemplateEngine templateEngine;
 
-    public String sendMail(EmailMessage emailDTO, String type) throws MessagingException {
+    public String sendMail(EmailMessage emailMassage, String type) throws MessagingException {
         String code = createCode(); // 인증번호 및 임시 비밀번호 생성
 
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
 
         MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, false, "UTF-8");
-        mimeMessageHelper.setTo(emailDTO.getTo()); // 메일 수신자
-        mimeMessageHelper.setSubject(emailDTO.getSubject()); // 메일 제목
+        mimeMessageHelper.setTo(emailMassage.getTo()); // 메일 수신자
+        mimeMessageHelper.setSubject(emailMassage.getSubject()); // 메일 제목
         mimeMessageHelper.setText(setContext(code, type), true); // 메일 본문 내용, HTML 여부
         javaMailSender.send(mimeMessage);
         return code;
@@ -51,7 +51,6 @@ public class EmailService {
         return key.toString();
     }
 
-    // thymeleaf를 통한 html 적용
     public String setContext(String code, String type) {
         Context context = new Context();
         context.setVariable("code", code);

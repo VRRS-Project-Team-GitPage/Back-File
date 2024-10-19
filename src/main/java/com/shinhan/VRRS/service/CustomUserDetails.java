@@ -2,17 +2,15 @@ package com.shinhan.VRRS.service;
 
 import com.shinhan.VRRS.entity.User;
 import com.shinhan.VRRS.entity.VegetarianType;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 
+@RequiredArgsConstructor
 public class CustomUserDetails implements UserDetails {
     private final User user;
-
-    public CustomUserDetails(User user) {
-        this.user = user;
-    }
 
     public Long getId() {return user.getId();}
 
@@ -32,7 +30,6 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // 권한(roles) 처리: 여기에 사용자의 역할을 권한으로 변환하여 반환
         return null;
     }
 

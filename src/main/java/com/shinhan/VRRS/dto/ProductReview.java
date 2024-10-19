@@ -6,8 +6,7 @@ import lombok.Setter;
 
 import java.util.List;
 
-@Getter
-@Setter
+@Getter @Setter
 @AllArgsConstructor
 public class ProductReview {
     private ReviewDTO review; // 사용자 리뷰

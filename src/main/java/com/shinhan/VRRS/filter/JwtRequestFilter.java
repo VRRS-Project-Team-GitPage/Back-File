@@ -19,7 +19,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class JwtRequestFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
-    private final JwtUtil jwtUtil;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -30,13 +29,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
-            username = jwtUtil.extractUsername(jwt);
+            username = JwtUtil.extractUsername(jwt);
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
-            if (jwtUtil.validateToken(jwt, userDetails.getUsername())) {
+            if (JwtUtil.validateToken(jwt, userDetails.getUsername())) {
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

@@ -5,8 +5,7 @@ import lombok.Setter;
 
 import java.util.List;
 
-@Getter
-@Setter
+@Getter @Setter
 public class RankResponse {
     private List<ProductDTO> totalRank; // 전체 인기순위
     private List<ProductDTO> vegTypeRank; // 채식유형 인기순위

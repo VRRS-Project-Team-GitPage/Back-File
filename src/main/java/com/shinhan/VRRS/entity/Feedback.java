@@ -10,13 +10,11 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Getter
-@Setter
+@Getter @Setter
 public class Feedback {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
     private String content;
     private LocalDateTime date;
 

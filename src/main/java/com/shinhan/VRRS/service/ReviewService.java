@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -100,14 +99,8 @@ public class ReviewService {
     }
 
     // 정렬 기준에 따라 사용자 리뷰 조회
-    public List<Review> getUserReviews(Long userId, String sortOrder) {
-        Sort sort = Sort.by("date");
-        if ("desc".equalsIgnoreCase(sortOrder))
-            sort = sort.descending();
-        else
-            sort = sort.ascending();
-
-        return reviewRepository.findByUserId(userId, sort);
+    public List<Review> getUserReviews(Long userId) {
+        return reviewRepository.findByUserIdOrderByDateAsc(userId);
     }
 
     // 리뷰 저장 메서드

@@ -1,5 +1,6 @@
 package com.shinhan.VRRS.dto;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -9,7 +10,7 @@ import lombok.Setter;
 public class IngredientRequest {
     private String reportNum;
     @NotNull
-    @Min(1) @Min(6)
+    @Min(1) @Max(6)
     private Integer vegTypeId;
     @NotNull
     private String ingredients;

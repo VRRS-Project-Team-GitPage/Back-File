@@ -4,6 +4,7 @@ import com.shinhan.VRRS.dto.EmailMessage;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.thymeleaf.context.Context;
@@ -15,6 +16,9 @@ import java.util.Random;
 @Service
 @RequiredArgsConstructor
 public class EmailService {
+    @Value("${spring.mail.username}")
+    private String username;
+
     private final JavaMailSender javaMailSender;
     private final SpringTemplateEngine templateEngine;
 
@@ -24,6 +28,11 @@ public class EmailService {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
 
         MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, false, "UTF-8");
+
+        String fromName = "채식어디";
+        String fromEmail = username + "@gmail.com";
+
+        mimeMessageHelper.setFrom(fromName + " <" + fromEmail + ">");
         mimeMessageHelper.setTo(emailMassage.getTo()); // 메일 수신자
         mimeMessageHelper.setSubject(emailMassage.getSubject()); // 메일 제목
         mimeMessageHelper.setText(setContext(code, type), true); // 메일 본문 내용, HTML 여부

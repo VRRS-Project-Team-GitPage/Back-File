@@ -31,10 +31,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	implementation 'org.json:json:20231013'
 
-	// Jackson
-	implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
-	implementation 'com.fasterxml.jackson.core:jackson-core:2.15.2'
-	implementation 'com.fasterxml.jackson.core:jackson-annotations:2.15.2'
+	// Gson
+	implementation 'com.google.code.gson:gson:2.10.1'
 
 	//Jwt
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'

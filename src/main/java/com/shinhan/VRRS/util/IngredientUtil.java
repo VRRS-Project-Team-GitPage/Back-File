@@ -284,8 +284,9 @@ public class IngredientUtil {
 
     // 괄호 처리 메서드
     public static List<String> processIngredients(List<String> ingredients) {
-        for (int i = 0; i < ingredients.size(); i++) {
-            String text = ingredients.get(i);
+        List<String> result = new ArrayList<>(ingredients);
+        for (int i = 0; i < result.size(); i++) {
+            String text = result.get(i);
 
             if (text.matches(".*[\\[\\]{}].*")) {
                 text = text.replace("{", "[").replace("}", "]");
@@ -293,9 +294,9 @@ public class IngredientUtil {
             }
             if (!areBracketsBalanced(text)) return null;
 
-            ingredients.set(i, text);
+            result.set(i, text);
         }
-        return ingredients; // 처리된 원재료 리스트 반환
+        return result; // 처리된 원재료 리스트 반환
     }
 
     // 문자열 분리 메서드

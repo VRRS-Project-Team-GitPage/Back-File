@@ -3,9 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <style>
+        .responsive-container {
+            margin: 100px; /* 기본 여백 설정 */
+            color: black;
+        }
+
+        @media (max-width: 768px) {
+            .responsive-container {
+                margin: 20px; /* 모바일에서의 여백 줄이기 */
+            }
+        }
+    </style>
 </head>
 <body>
-<div style="margin:100px;">
+<div class="responsive-container">
     <h1> 안녕하세요.</h1>
     <h1> 채식주의자를 위한 플랫폼 [채식어디] 입니다. </h1>
     <br>

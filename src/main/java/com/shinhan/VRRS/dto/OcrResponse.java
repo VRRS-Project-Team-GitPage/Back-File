@@ -16,7 +16,7 @@ public class OcrResponse {
 
     public OcrResponse(String reportNum, List<String> ingredients, boolean fullBracket) {
         this.reportNum = reportNum;
-        this.ingredients = ingredients.toString();
+        this.ingredients = String.join(", ", ingredients);
         this.exists = false;
         this.fullBracket = fullBracket;
     }

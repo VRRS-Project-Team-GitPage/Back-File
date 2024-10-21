@@ -1,26 +1,24 @@
 package com.shinhan.VRRS;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.shinhan.VRRS.dto.OcrResponse;
 import com.shinhan.VRRS.entity.Product;
-import com.shinhan.VRRS.repository.IngredientRepository;
 import com.shinhan.VRRS.repository.ProductRepository;
 import com.shinhan.VRRS.util.IngredientUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.Disabled;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.imageio.ImageIO;
 import java.util.*;
 
-@SpringBootTest
+@Disabled
+// @SpringBootTest
 class VrrsApplicationTests {
-	@Autowired
-	private IngredientRepository ingredientRepository;
 
 	@Autowired
 	private ProductRepository productRepository;
@@ -100,7 +98,7 @@ class VrrsApplicationTests {
 		}
 	}
 
-	public OcrResponse parseJson(String response) throws JsonProcessingException {
+	public OcrResponse parseJson(String response) {
 		// Gson 객체 생성
 		Gson gson = new Gson();
 

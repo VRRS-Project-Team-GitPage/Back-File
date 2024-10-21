@@ -139,7 +139,7 @@ public class ReadingService {
 
         if (proVegTypeId != null)
             return new IngredientResponse(null, null, consumables, nonConsumables, unidentifiables);
-        return new IngredientResponse(finalVegTypeId, ingredients.toString(), consumables, nonConsumables, unidentifiables);
+        return new IngredientResponse(finalVegTypeId, String.join(", ", ingredients), consumables, nonConsumables, unidentifiables);
     }
 
     // 괄호 밖 원재료 추출 메서드

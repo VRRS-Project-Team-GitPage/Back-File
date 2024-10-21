@@ -1,24 +1,21 @@
 package com.shinhan.VRRS;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.shinhan.VRRS.dto.OcrResponse;
 import com.shinhan.VRRS.entity.Product;
 import com.shinhan.VRRS.repository.IngredientRepository;
 import com.shinhan.VRRS.repository.ProductRepository;
 import com.shinhan.VRRS.util.IngredientUtil;
-import com.shinhan.VRRS.util.JsonUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.imageio.ImageIO;
-import javax.imageio.ImageWriter;
 import java.util.*;
-
-import static com.shinhan.VRRS.util.IngredientUtil.*;
 
 @SpringBootTest
 class VrrsApplicationTests {
@@ -104,39 +101,40 @@ class VrrsApplicationTests {
 	}
 
 	public OcrResponse parseJson(String response) throws JsonProcessingException {
-		//json 파싱
-		ObjectMapper objectMapper = new ObjectMapper();
-		JsonNode jobj = objectMapper.readTree(response);
+		// Gson 객체 생성
+		Gson gson = new Gson();
 
-		//images 배열 -> obj 화
-		JsonNode jArray = jobj.get("images");
-		JsonNode JSONObjImage = jArray.get(0);
-		ArrayNode fields = (ArrayNode) JSONObjImage.get("fields");
+		// JSON 파싱
+		JsonObject jobj = JsonParser.parseString(response).getAsJsonObject();
 
-		List<Map<String, Object>> m = JsonUtil.getListMapFromJsonArray(fields);
+		// images 배열 가져오기
+		JsonArray jArray = jobj.getAsJsonArray("images");
+		JsonObject jsonObjImage = jArray.get(0).getAsJsonObject();
+		JsonArray fields = jsonObjImage.getAsJsonArray("fields");
+
 		List<String> textList = new ArrayList<>();
-		List<Double> startCoords = new ArrayList<>(); // vertices 리스트 추가
-		List<Double> endCoords = new ArrayList<>(); // vertices 리스트 추가
+		List<Double> startCoords = new ArrayList<>();
+		List<Double> endCoords = new ArrayList<>();
 
-		for (Map<String, Object> as : m) {
-            textList.add((String) as.get("inferText"));
+		for (int i = 0; i < fields.size(); i++) {
+			JsonObject field = fields.get(i).getAsJsonObject();
+
+			// inferText 추출
+			String inferText = field.get("inferText").getAsString();
+			textList.add(inferText);
 
 			// "boundingPoly"에서 "vertices"의 값을 추출
-			Map<String, Object> boundingPoly = (Map<String, Object>) as.get("boundingPoly");
-			List<Map<String, Object>> vertices = (List<Map<String, Object>>) boundingPoly.get("vertices");
+			JsonObject boundingPoly = field.getAsJsonObject("boundingPoly");
+			JsonArray vertices = boundingPoly.getAsJsonArray("vertices");
 
-			if (vertices != null && !vertices.isEmpty()) {
-				Map<String, Object> vertex1 = vertices.get(0);
-				double x = (double) vertex1.get("x");
-
+			if (vertices != null && vertices.size() >= 2) {
 				// 첫 번째 vertex의 x 값을 저장
-                startCoords.add(x);
-
-				Map<String, Object> vertex2 = vertices.get(1);
-				x = (double) vertex2.get("x");
+				double x1 = vertices.get(0).getAsJsonObject().get("x").getAsDouble();
+				startCoords.add(x1);
 
 				// 두 번째 vertex의 x 값을 저장
-                endCoords.add(x);
+				double x2 = vertices.get(1).getAsJsonObject().get("x").getAsDouble();
+				endCoords.add(x2);
 			}
 		}
 

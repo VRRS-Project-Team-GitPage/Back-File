@@ -67,7 +67,7 @@ public class AuthController {
 
     // 비밀번호 찾기
     @PostMapping("/find/password")
-    public ResponseEntity<PasswordFindRequest> sendPasswordMail(@Valid @RequestBody UserDTO request) {
+    public ResponseEntity<PasswordFindResponse> sendPasswordMail(@Valid @RequestBody UserDTO request) {
         if (request.getEmail() == null || request.getUsername() == null)
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // 400 Bad Request
 
@@ -84,7 +84,7 @@ public class AuthController {
 
         try {
             String code = mailService.sendMail(emailMessage, "password");
-            return ResponseEntity.ok(new PasswordFindRequest(code, username));
+            return ResponseEntity.ok(new PasswordFindResponse(code, username));
         } catch (MessagingException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR); // 500 Server Error
         }

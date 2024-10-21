@@ -17,7 +17,7 @@ public class User {
     private String password; // 비밀번호
     private String nickname; // 닉네임
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "veg_type_id")
     private VegetarianType vegType; // 채식 유형
 

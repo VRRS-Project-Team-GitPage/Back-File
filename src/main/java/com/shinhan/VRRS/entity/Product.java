@@ -15,11 +15,11 @@ public class Product {
     private String ingredients; // 원재료
     private String reportNum; // 품목보고번호
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id")
     private Category category; // 카테고리
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "veg_type_id")
     private VegetarianType vegType; // 채식유형
 

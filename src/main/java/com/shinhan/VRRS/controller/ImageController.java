@@ -25,6 +25,7 @@ public class ImageController {
             Resource resource = imageService.getImage(imgPath);
             if (!resource.exists() || !resource.isReadable())
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 Not Found
+
             MediaType mediaType = MediaType.parseMediaType("image/webp");
             return ResponseEntity.ok().contentType(mediaType).body(resource);
         } catch (MalformedURLException e) {

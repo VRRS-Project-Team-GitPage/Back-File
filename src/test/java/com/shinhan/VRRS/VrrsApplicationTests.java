@@ -4,14 +4,13 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.shinhan.VRRS.dto.OcrResponse;
+import com.shinhan.VRRS.dto.response.OcrResponse;
 import com.shinhan.VRRS.entity.Product;
 import com.shinhan.VRRS.repository.ProductRepository;
 import com.shinhan.VRRS.util.IngredientUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.junit.jupiter.api.Disabled;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.imageio.ImageIO;
 import java.util.*;

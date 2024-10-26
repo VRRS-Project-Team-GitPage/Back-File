@@ -1,4 +1,4 @@
-package com.shinhan.VRRS.dto;
+package com.shinhan.VRRS.dto.response;
 
 import com.shinhan.VRRS.entity.VegetarianType;
 import com.shinhan.VRRS.service.CustomUserDetails;

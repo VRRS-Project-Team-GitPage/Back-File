@@ -1,5 +1,6 @@
-package com.shinhan.VRRS.dto;
+package com.shinhan.VRRS.dto.response;
 
+import com.shinhan.VRRS.dto.ProductDTO;
 import lombok.Getter;
 import lombok.Setter;
 

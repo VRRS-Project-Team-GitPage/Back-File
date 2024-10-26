@@ -32,7 +32,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable) // CSRF 비활성화
                 .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**").permitAll() // /auth/** 경로는 모두 접근 허용
+                .requestMatchers("/**", "/images/**").permitAll() // 접근 허용 경로
                 .anyRequest().authenticated()) // 다른 모든 요청은 인증 필요
                 .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT 사용을 위한 상태 비저장
@@ -40,6 +40,11 @@ public class SecurityConfig {
 
         // JWT 필터 추가
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+
+        // HTTPS 리디렉션 설정
+        http.requiresChannel(channel ->
+                channel.anyRequest().requiresSecure() // 모든 요청을 HTTPS로 요구
+        );
 
         return http.build();
     }

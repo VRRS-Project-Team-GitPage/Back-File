@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,32 +46,36 @@ public class BookmarkService {
 
     @Transactional
     public void saveBookmark(Long proId, Long userId) {
-        CompositePK id = new CompositePK(proId, userId);
-        if (!bookmarkRepository.existsById(id)) {
-            Bookmark bookmark = new Bookmark(proId, userId);
-            bookmarkRepository.save(bookmark);
+        Product product = productRepository.findById(proId).orElseThrow(NoSuchElementException::new);
 
-            // 북마크 수 증가 로직
-            Product product = productRepository.findById(proId).orElseThrow(NullPointerException::new);
-            product.setBookmarkCnt(product.getBookmarkCnt() + 1);
-            productRepository.save(product);
-        } else {
-            throw new RuntimeException("Bookmark already exists.");
-        }
+        // 북마크 확인
+        CompositePK id = new CompositePK(proId, userId);
+        if (bookmarkRepository.existsById(id))
+            throw new IllegalArgumentException();
+
+        // 북마크 저장
+        Bookmark bookmark = new Bookmark(proId, userId);
+        bookmarkRepository.save(bookmark);
+
+        // 북마크 수 증가 로직
+        product.setBookmarkCnt(product.getBookmarkCnt() + 1);
+        productRepository.save(product);
     }
 
     @Transactional
     public void deleteBookmark(Long proId, Long userId) {
-        CompositePK id = new CompositePK(proId, userId);
-        if (bookmarkRepository.existsById(id)) {
-            bookmarkRepository.deleteById(id);
+        Product product = productRepository.findById(proId).orElseThrow(NoSuchElementException::new);
 
-            // 북마크 수 감소 로직
-            Product product = productRepository.findById(proId).orElseThrow(NullPointerException::new);
-            product.setBookmarkCnt(Math.max(product.getBookmarkCnt() - 1, 0)); // 음수 방지
-            productRepository.save(product);
-        } else {
-            throw new RuntimeException("Bookmark not found.");
-        }
+        // 북마크 확인
+        CompositePK id = new CompositePK(proId, userId);
+        if (!bookmarkRepository.existsById(id))
+            throw new NoSuchElementException();
+
+        // 북마크 삭제
+        bookmarkRepository.deleteById(id);
+
+        // 북마크 수 감소 로직
+        product.setBookmarkCnt(Math.max(product.getBookmarkCnt() - 1, 0)); // 음수 방지
+        productRepository.save(product);
     }
 }

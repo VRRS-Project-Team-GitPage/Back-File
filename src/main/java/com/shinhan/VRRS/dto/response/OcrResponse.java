@@ -1,4 +1,4 @@
-package com.shinhan.VRRS.dto;
+package com.shinhan.VRRS.dto.response;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -12,7 +12,7 @@ public class FeedbackService {
     private final FeedbackRepository feedbackRepository;
 
     @Transactional
-    public void saveFeedback(String content) {
-        feedbackRepository.save(new Feedback(content));
+    public void saveFeedback(String type, String content) {
+        feedbackRepository.save(new Feedback(type, content));
     }
 }

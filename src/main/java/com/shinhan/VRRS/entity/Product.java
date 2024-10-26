@@ -25,6 +25,5 @@ public class Product {
 
     private int recCnt; // 추천수
     private int notRecCnt; // 비추천수
-    private int reviewCnt; // 리뷰수
     private int bookmarkCnt; // 북마크수
 }

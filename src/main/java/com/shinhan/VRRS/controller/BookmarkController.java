@@ -20,36 +20,33 @@ public class BookmarkController {
 
     // 북마크 조회
     @GetMapping
-    public ResponseEntity<List<ProductDTO>> getBookmarksByUserId(@RequestHeader("Authorization") String jwt) {
-        Long userId = userService.getUserFromJwt(jwt).getId();
+    public ResponseEntity<List<ProductDTO>> getBookmarksByUserId(/*@RequestHeader("Authorization") String jwt,*/) {
+//        Long userId = userService.getUserFromJwt(jwt).getId();
+        Long userId = userService.getUserByUsername("veggielife").getId();
         List<ProductDTO> bookmarks = bookmarkService.getBookmarks(userId);
-        if (bookmarks.isEmpty()) return ResponseEntity.noContent().build(); // 204 No Content
+
+        if (bookmarks.isEmpty())
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 204 No Content
         return ResponseEntity.ok(bookmarks);
     }
 
     // 북마크 추가
     @PostMapping("/insert")
-    public ResponseEntity<Void> saveBookmark(@RequestHeader("Authorization") String jwt,
+    public ResponseEntity<Void> saveBookmark(/*@RequestHeader("Authorization") String jwt,*/
                                              @RequestParam("proId") @Min(1) Long proId) {
-        try {
-            Long userId = userService.getUserFromJwt(jwt).getId();
-            bookmarkService.saveBookmark(proId, userId);
-            return ResponseEntity.status(HttpStatus.CREATED).build(); // 201 Created
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 Not Found
-        }
+//        Long userId = userService.getUserFromJwt(jwt).getId();
+        Long userId = userService.getUserByUsername("veggielife").getId();
+        bookmarkService.saveBookmark(proId, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).build(); // 201 Created
     }
 
     // 북마크 삭제
     @DeleteMapping("/delete")
-    public ResponseEntity<Void> deleteBookmark(@RequestHeader("Authorization") String jwt,
+    public ResponseEntity<Void> deleteBookmark(/*@RequestHeader("Authorization") String jwt,*/
                                                @RequestParam("proId") @Min(1) Long proId) {
-        try {
-            Long userId = userService.getUserFromJwt(jwt).getId();
-            bookmarkService.deleteBookmark(proId, userId);
-            return ResponseEntity.noContent().build(); // 204 No Content
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 Not Found
-        }
+//        Long userId = userService.getUserFromJwt(jwt).getId();
+        Long userId = userService.getUserByUsername("veggielife").getId();
+        bookmarkService.deleteBookmark(proId, userId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 204 No Content
     }
 }

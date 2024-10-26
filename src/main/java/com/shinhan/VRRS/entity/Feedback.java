@@ -15,10 +15,12 @@ public class Feedback {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    private String type;
     private String content;
     private LocalDateTime date;
 
-    public Feedback(String content) {
+    public Feedback(String type, String content) {
+        this.type = type;
         this.content = content;
         this.date = LocalDateTime.now();
     }

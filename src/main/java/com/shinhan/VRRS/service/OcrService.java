@@ -1,11 +1,10 @@
 package com.shinhan.VRRS.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.shinhan.VRRS.dto.OcrResponse;
+import com.shinhan.VRRS.dto.response.OcrResponse;
 import com.shinhan.VRRS.util.IngredientUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -72,18 +71,21 @@ public class OcrService {
         return response;
     }
 
-//    public List<String> parseJson(StringBuffer response) {
-    public OcrResponse parseJson(String response) throws JsonProcessingException {
+    public OcrResponse parseJson(StringBuffer response) {
         // Gson 객체 생성
         Gson gson = new Gson();
 
         // JSON 파싱
-        JsonObject jobj = JsonParser.parseString(response).getAsJsonObject();
+        JsonObject jobj = JsonParser.parseString(response.toString()).getAsJsonObject();
 
         // images 배열 가져오기
         JsonArray jArray = jobj.getAsJsonArray("images");
         JsonObject jsonObjImage = jArray.get(0).getAsJsonObject();
         JsonArray fields = jsonObjImage.getAsJsonArray("fields");
+
+        // 텍스트 없는 사진 처리
+        if (fields.isEmpty())
+            throw new IllegalArgumentException();
 
         List<String> textList = new ArrayList<>();
         List<Double> startCoords = new ArrayList<>();

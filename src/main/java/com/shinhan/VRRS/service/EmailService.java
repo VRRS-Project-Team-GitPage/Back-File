@@ -1,6 +1,6 @@
 package com.shinhan.VRRS.service;
 
-import com.shinhan.VRRS.dto.EmailMessage;
+import com.shinhan.VRRS.dto.ect.EmailMessage;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;

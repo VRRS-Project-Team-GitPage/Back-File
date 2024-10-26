@@ -241,7 +241,7 @@ public class IngredientUtil {
         return ingredients;
     }
 
-    // 원재료명만 추출하는 메서드
+    // 정리된 원재료명 추출
     public static List<String> extractCleanIngredient(List<String> textList) {
         List<String> cleanedIngredients = new ArrayList<>();
 

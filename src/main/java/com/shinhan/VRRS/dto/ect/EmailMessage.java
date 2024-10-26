@@ -1,4 +1,4 @@
-package com.shinhan.VRRS.dto;
+package com.shinhan.VRRS.dto.ect;
 
 import lombok.Builder;
 import lombok.Getter;

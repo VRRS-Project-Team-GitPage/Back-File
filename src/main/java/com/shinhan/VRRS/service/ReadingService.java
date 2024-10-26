@@ -1,6 +1,6 @@
 package com.shinhan.VRRS.service;
 
-import com.shinhan.VRRS.dto.IngredientResponse;
+import com.shinhan.VRRS.dto.response.IngredientResponse;
 import com.shinhan.VRRS.repository.IngredientRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

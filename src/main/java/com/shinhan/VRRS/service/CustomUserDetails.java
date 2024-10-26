@@ -12,8 +12,6 @@ import java.util.Collection;
 public class CustomUserDetails implements UserDetails {
     private final User user;
 
-    public Long getId() {return user.getId();}
-
     public String getNickname() {return user.getNickname();}
 
     public VegetarianType getVegType() {return user.getVegType();}

@@ -11,11 +11,10 @@ import java.util.List;
 
 @Repository
 public interface RecommendationRepository extends JpaRepository<Product, Long> {
-    @Query("SELECT p FROM Product p ORDER BY (p.recCnt * 0.5 + p.bookmarkCnt + (p.id * 0.01)) DESC")
+    @Query("SELECT p FROM Product p ORDER BY (p.recCnt * 0.5 + p.bookmarkCnt) DESC")
     List<Product> findByTotalRank(Pageable pageable);
 
-    @Query("SELECT p FROM Product p WHERE p.vegType.id IN :vegTypeIds " +
-           "ORDER BY (p.recCnt * 0.5 + p.bookmarkCnt + (p.id * 0.01)) DESC")
+    @Query("SELECT p FROM Product p WHERE p.vegType.id IN :vegTypeIds ORDER BY (p.recCnt * 0.5 + p.bookmarkCnt) DESC")
     List<Product> findByVegTypeRank(@Param("vegTypeIds") List<Integer> vegTypeIds, Pageable pageable);
 
     @Query("SELECT p FROM Product p WHERE p.vegType.id IN :vegTypeIds")

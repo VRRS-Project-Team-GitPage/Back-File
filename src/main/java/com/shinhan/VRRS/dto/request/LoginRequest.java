@@ -1,13 +1,13 @@
-package com.shinhan.VRRS.dto;
+package com.shinhan.VRRS.dto.request;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter @Setter
 public class LoginRequest {
-    @NotNull
+    @NotBlank
     private String username;
-    @NotNull
+    @NotBlank
     private String password;
 }

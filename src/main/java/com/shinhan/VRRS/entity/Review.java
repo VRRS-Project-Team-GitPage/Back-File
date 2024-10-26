@@ -23,7 +23,7 @@ public class Review {
     private boolean isRec; // 추천 여부
     private boolean isChange; // 수정 여부
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd")
     private LocalDateTime date; // 작성 날짜
 
     public Review(Long proId, Long userId, String content, boolean isRec) {

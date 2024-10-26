@@ -6,9 +6,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -23,6 +26,7 @@ public class ImageService {
     @Value("${file.upload-dir}")
     private String uploadDir;
 
+    @Async
     public String uploadProductImage(MultipartFile image) throws IOException {
         String imgName = UUID.randomUUID() + ".webp"; // 이미지명
         String dbImgPath = "/products/" + imgName; // DB에 저장할 이미지 경로

@@ -1,7 +1,7 @@
 package com.shinhan.VRRS.service;
 
 import com.shinhan.VRRS.dto.ProductDTO;
-import com.shinhan.VRRS.dto.RankResponse;
+import com.shinhan.VRRS.dto.response.RankResponse;
 import com.shinhan.VRRS.entity.Product;
 import com.shinhan.VRRS.entity.User;
 import com.shinhan.VRRS.repository.RecommendationRepository;
@@ -46,14 +46,14 @@ public class RecommendationService {
         if (vegTypeId != 3) for (int i = 1; i<= vegTypeId; i++) vegTypeIds.add(i);
         else vegTypeIds = Arrays.asList(1, 3); // 오보 베지테리언 처리
 
-        // 추천 제품, 비추천 제품 ID 조회
+        // 추천 제품 및 리뷰 제품 ID 조회
         List<Product> recommendedProducts = reviewRepository.findLikedProductIdsByUserId(userId);
-        List<Long> dislikedProductIds = reviewRepository.findDislikedProductIdsByUserId(userId);
+        List<Long> reviewProductIds = reviewRepository.findReviewProductIdsByUserId(userId);
 
-        // 채식유형에 맞는 제품 검색 (비추천 제품 제외)
-        List<Product> categoryProducts = recommendationRepository.findByCategoryAndVegTypeInAndIdNotIn(categoryId, vegTypeIds, dislikedProductIds);
+        // 채식유형에 맞는 제품 검색 (리뷰 제품 제외)
+        List<Product> categoryProducts = recommendationRepository.findByCategoryAndVegTypeInAndIdNotIn(categoryId, vegTypeIds, reviewProductIds);
 
-        return sortBySimilarity(categoryProducts, recommendedProducts);
+        return sortBySimilarity(null, categoryProducts, recommendedProducts);
     }
 
     // 키워드 기반 추천
@@ -66,14 +66,14 @@ public class RecommendationService {
         if (vegTypeId != 3) for (int i = 1; i<= vegTypeId; i++) vegTypeIds.add(i);
         else vegTypeIds = Arrays.asList(1, 3); // 오보 베지테리언 처리
 
-        // 추천 제품, 비추천 제품 ID 조회
+        // 추천 제품 및 리뷰 제품 ID 조회
         List<Product> recommendedProducts = reviewRepository.findLikedProductIdsByUserId(userId);
-        List<Long> dislikedProductIds = reviewRepository.findDislikedProductIdsByUserId(userId);
+        List<Long> reviewProductIds = reviewRepository.findReviewProductIdsByUserId(userId);
 
-        // 채식유형에 맞는 제품 검색 (비추천 제품 제외)
-        List<Product> keywordProducts = recommendationRepository.findByKeywordAndVegTypeInAndIdNotIn(keyword, vegTypeIds, dislikedProductIds);
+        // 채식유형에 맞는 제품 검색 (리뷰 제품 제외)
+        List<Product> keywordProducts = recommendationRepository.findByKeywordAndVegTypeInAndIdNotIn(keyword, vegTypeIds, reviewProductIds);
 
-        return sortBySimilarity(keywordProducts, recommendedProducts);
+        return sortBySimilarity(keyword, keywordProducts, recommendedProducts);
     }
 
     // 판독 기반 추천
@@ -106,11 +106,13 @@ public class RecommendationService {
     }
 
     // 유사도 정렬
-    private List<ProductDTO> sortBySimilarity(List<Product> products, List<Product> recommendedProducts) {
+    private List<ProductDTO> sortBySimilarity(String keyword, List<Product> products, List<Product> recommendedProducts) {
         Map<Product, Integer> similarityMap = new HashMap<>();
 
         for (Product product : products) {
             int similarity = calculateSimilarity(product, recommendedProducts);
+            if (keyword != null && product.getName().contains(keyword))
+                similarity += 10;
             similarityMap.put(product, similarity);
         }
 
@@ -155,34 +157,16 @@ public class RecommendationService {
     public Set<String> parseIngredients(String ingredient) {
         Set<String> parsedIngredients = new LinkedHashSet<>();
         StringBuilder currentIngredient = new StringBuilder();
-        Deque<Character> bracketStack = new ArrayDeque<>();
 
         for (char c : ingredient.toCharArray()) {
-            if (c == '(' || c == '[') {
-                if (bracketStack.isEmpty() && !currentIngredient.isEmpty()) {
-                    // 괄호 시작 전에 있던 원재료 추가
-                    parsedIngredients.add(currentIngredient.toString().trim());
-                    currentIngredient.setLength(0);
-                }
-                bracketStack.push(c);
-            } else if (c == ')' || c == ']') {
-                bracketStack.pop();
-                if (bracketStack.isEmpty()) {
-                    // 괄호 안의 원재료를 개별 항목으로 분리
-                    String[] innerIngredients = currentIngredient.toString().split(",");
-                    for (String innerIngredient : innerIngredients) {
-                        parsedIngredients.add(innerIngredient.trim());
-                    }
-                    currentIngredient.setLength(0); // 세부 원재료 처리 후 초기화
-                }
-            } else if (c == ',' && bracketStack.isEmpty()) {
-                // 괄호 밖의 원재료 처리
+            if (c == ',' || c == '(' || c == '[' || c == ')' || c == ']') {
+                // 현재 원재료가 비어있지 않으면 추가
                 if (!currentIngredient.isEmpty()) {
                     parsedIngredients.add(currentIngredient.toString().trim());
-                    currentIngredient.setLength(0);
+                    currentIngredient.setLength(0); // 원재료 초기화
                 }
             } else {
-                // 괄호 안이나 괄호 밖의 문자열을 추가
+                // 원재료의 문자 추가
                 currentIngredient.append(c);
             }
         }
@@ -190,6 +174,7 @@ public class RecommendationService {
         // 마지막 원재료 추가
         if (!currentIngredient.isEmpty())
             parsedIngredients.add(currentIngredient.toString().trim());
+
         return parsedIngredients;
     }
 }

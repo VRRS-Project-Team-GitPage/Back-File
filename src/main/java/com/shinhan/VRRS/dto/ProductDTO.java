@@ -13,7 +13,6 @@ public class ProductDTO {
     private String vegType; // 채식유형명
     private int recCnt;
     private int notRecCnt;
-    private int reviewCnt;
     private String imgUrl; // 이미지 URL
 
     public ProductDTO(Product product) {
@@ -23,7 +22,6 @@ public class ProductDTO {
         this.vegType = product.getVegType().getName();
         this.recCnt = product.getRecCnt();
         this.notRecCnt = product.getNotRecCnt();
-        this.reviewCnt = product.getReviewCnt();
 
         // 이미지 URL 생성
         this.imgUrl = ServletUriComponentsBuilder.fromCurrentContextPath()

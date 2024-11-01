@@ -5,6 +5,7 @@ import com.shinhan.VRRS.entity.Product;
 import com.shinhan.VRRS.entity.Review;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.time.LocalDateTime;
 
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 public class UserReviewResponse {
     private Long proId;
     private String proName;
+    private String imgUrl;
     private String content;
     private boolean rec;
     private boolean change;
@@ -25,5 +27,9 @@ public class UserReviewResponse {
         this.content = review.getContent();
         this.rec = review.isRec();
         this.date = review.getDate();
+
+        // 이미지 URL 생성
+        this.imgUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/images").path(product.getImgPath()).toUriString();
     }
 }

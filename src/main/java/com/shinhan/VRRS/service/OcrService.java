@@ -1,6 +1,5 @@
 package com.shinhan.VRRS.service;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -72,9 +71,6 @@ public class OcrService {
     }
 
     public OcrResponse parseJson(StringBuffer response) {
-        // Gson 객체 생성
-        Gson gson = new Gson();
-
         // JSON 파싱
         JsonObject jobj = JsonParser.parseString(response.toString()).getAsJsonObject();
 
@@ -113,8 +109,15 @@ public class OcrService {
             }
         }
 
+        // 품목보고번호 및 원재료명 추출
         String reportNum = IngredientUtil.extractReportNum(textList);
         List<String> ingredients = IngredientUtil.extractIngredient(textList, startCoords, endCoords);
+
+        // 추출된 원재료명이 없는 경우
+        if (ingredients.isEmpty())
+            ingredients = Collections.singletonList(String.join(" ", textList));
+
+        // 괄호 검사
         List<String> processedIngredients = IngredientUtil.processIngredients(ingredients);
 
         // 괄호 짝이 맞지 않으면 원본 원재료 리스트를 반환

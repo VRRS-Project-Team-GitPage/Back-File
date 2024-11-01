@@ -37,7 +37,7 @@ public class RecommendationService {
     }
 
     // 카테고리 기반 추천
-    public List<ProductDTO> recommendByCategory(Integer categoryId, User user) {
+    public ProductDTO recommendByCategory(Integer categoryId, User user) {
         Long userId = user.getId();
         Integer vegTypeId = user.getVegType().getId();
 
@@ -53,11 +53,16 @@ public class RecommendationService {
         // 채식유형에 맞는 제품 검색 (리뷰 제품 제외)
         List<Product> categoryProducts = recommendationRepository.findByCategoryAndVegTypeInAndIdNotIn(categoryId, vegTypeIds, reviewProductIds);
 
-        return sortBySimilarity(null, categoryProducts, recommendedProducts);
+        // 빈 리스트 처리
+        if (categoryProducts.isEmpty()) return null;
+
+        // 유사도 기반으로 정렬
+        List<Product> sortedProducts = sortBySimilarity(null, categoryProducts, recommendedProducts);
+        return new ProductDTO(getRandomProduct(sortedProducts));
     }
 
     // 키워드 기반 추천
-    public List<ProductDTO> recommendByKeyword(String keyword, User user) {
+    public ProductDTO recommendByKeyword(String keyword, User user) {
         Long userId = user.getId();
         Integer vegTypeId = user.getVegType().getId();
 
@@ -73,7 +78,12 @@ public class RecommendationService {
         // 채식유형에 맞는 제품 검색 (리뷰 제품 제외)
         List<Product> keywordProducts = recommendationRepository.findByKeywordAndVegTypeInAndIdNotIn(keyword, vegTypeIds, reviewProductIds);
 
-        return sortBySimilarity(keyword, keywordProducts, recommendedProducts);
+        // 빈 리스트 처리
+        if (keywordProducts.isEmpty()) return null;
+
+        // 유사도 기반으로 정렬
+        List<Product> sortedProducts = sortBySimilarity(keyword, keywordProducts, recommendedProducts);
+        return new ProductDTO(getRandomProduct(sortedProducts));
     }
 
     // 판독 기반 추천
@@ -92,8 +102,8 @@ public class RecommendationService {
             // 교집합 계산
             double similarity = calculateJaccardSimilarity(productIngredients, selectedIngredients);
 
-            // 30% 이상의 유사도만 추천
-            if (similarity >= 0.3)
+            // 20% 이상의 유사도만 추천
+            if (similarity >= 0.2)
                 productSimilarityMap.put(product, similarity);
         }
 
@@ -106,7 +116,7 @@ public class RecommendationService {
     }
 
     // 유사도 정렬
-    private List<ProductDTO> sortBySimilarity(String keyword, List<Product> products, List<Product> recommendedProducts) {
+    private List<Product> sortBySimilarity(String keyword, List<Product> products, List<Product> recommendedProducts) {
         Map<Product, Integer> similarityMap = new HashMap<>();
 
         for (Product product : products) {
@@ -119,8 +129,28 @@ public class RecommendationService {
         // 유사도 기준으로 정렬
         return products.stream()
                 .sorted((p1, p2) -> Integer.compare(similarityMap.get(p2), similarityMap.get(p1)))
-                .map(ProductDTO::new)
                 .collect(Collectors.toList());
+    }
+
+    // 랜덤 제품 선택
+    private Product getRandomProduct(List<Product> sortedProducts) {
+        double totalRankSum = 0;
+
+        // 각 제품의 선택 확률 계산
+        for (int i = 0; i < sortedProducts.size(); i++)
+            totalRankSum += (sortedProducts.size() - i);
+
+        // 랜덤 값 생성
+        double randomValue = new Random().nextDouble() * totalRankSum;
+
+        // 선택된 제품 찾기
+        double cumulativeRank = 0;
+        for (int i = 0; i < sortedProducts.size(); i++) {
+            cumulativeRank += (sortedProducts.size() - i);
+            if (randomValue < cumulativeRank)
+                return sortedProducts.get(i); // 선택된 제품 반환
+        }
+        return sortedProducts.get(0); // 기본적으로 첫 번째 제품 반환
     }
 
     // 부분 일치 유사도 계산

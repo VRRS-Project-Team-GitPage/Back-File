@@ -26,14 +26,13 @@ public class ReviewController {
 
     // 제품 리뷰 조회
     @GetMapping("/product")
-    public ResponseEntity<ProductReviewResponse> getProductReviews(/*@RequestHeader("Authorization") String jwt,*/
+    public ResponseEntity<ProductReviewResponse> getProductReviews(@RequestHeader("Authorization") String jwt,
                                                                    @RequestParam("proId") @Min(1) Long proId,
                                                                    @RequestParam(name="sort", defaultValue = "asc") String sort) {
         if (!sort.equals("asc") && !sort.equals("desc"))
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // 400 Bad Request
 
-//        Long userId = userService.getUserFromJwt(jwt).getId();
-        Long userId = userService.getUserByUsername("veggielife").getId();
+        Long userId = userService.getUserFromJwt(jwt).getId();
         ReviewDTO review = reviewService.getUerReview(proId, userId);
         List<Review> reviews = reviewService.getProductReviews(proId, userId, sort);
 
@@ -44,9 +43,8 @@ public class ReviewController {
 
     // 사용자 리뷰 조회
     @GetMapping("/user")
-    public ResponseEntity<List<UserReviewResponse>> getReviewsByUserId(/*@RequestHeader("Authorization") String jwt*/) {
-//        Long userId = userService.getUserFromJwt(jwt).getId();
-        Long userId = userService.getUserByUsername("veggielife").getId();
+    public ResponseEntity<List<UserReviewResponse>> getReviewsByUserId(@RequestHeader("Authorization") String jwt) {
+        Long userId = userService.getUserFromJwt(jwt).getId();
         List<Review> reviews = reviewService.getUserReviews(userId);
 
         if (reviews.isEmpty())
@@ -56,30 +54,27 @@ public class ReviewController {
 
     // 리뷰 등록
     @PostMapping("/submit")
-    public ResponseEntity<Review> submitReview(/*@RequestHeader("Authorization") String jwt,*/
+    public ResponseEntity<Review> submitReview(@RequestHeader("Authorization") String jwt,
                                                @Valid @RequestBody ReviewRequest request) {
-//        Long userId = userService.getUserFromJwt(jwt).getId();
-        Long userId = userService.getUserByUsername("veggielife").getId();
+        Long userId = userService.getUserFromJwt(jwt).getId();
         Review review = reviewService.saveReview(request.getProId(), userId, request.getContent(), request.isRec());
         return ResponseEntity.status(HttpStatus.CREATED).body(review); // 201 Created
     }
 
     // 리뷰 수정
     @PutMapping("/update")
-    public ResponseEntity<Review> updateReview(/*@RequestHeader("Authorization") String jwt,*/
+    public ResponseEntity<Review> updateReview(@RequestHeader("Authorization") String jwt,
                                                @Valid @RequestBody ReviewRequest request) {
-//        Long userId = userService.getUserFromJwt(jwt).getId();
-        Long userId = userService.getUserByUsername("veggielife").getId();
+        Long userId = userService.getUserFromJwt(jwt).getId();
         Review review = reviewService.updateReview(request.getProId(), userId, request.getContent(), request.isRec());
         return ResponseEntity.ok(review);
     }
 
     // 리뷰 삭제
     @DeleteMapping("/delete")
-    public ResponseEntity<Void> deleteReview(/*@RequestHeader("Authorization") String jwt,*/
+    public ResponseEntity<Void> deleteReview(@RequestHeader("Authorization") String jwt,
                                              @RequestParam("proId") @Min(1) Long proId) {
-//        Long userId = userService.getUserFromJwt(jwt).getId();
-        Long userId = userService.getUserByUsername("veggielife").getId();
+        Long userId = userService.getUserFromJwt(jwt).getId();
         reviewService.deleteReview(proId, userId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 204 No Content
     }

@@ -9,14 +9,13 @@ import java.util.regex.Pattern;
 public class IngredientUtil {
     private static final String[] KEYWORDS = {"제품명", "식품유형", "식품의", "제조", "기한", "내용량", "재질", "업소",
                                               "소재지", "성분", "참고", "제품은", "보관", "개봉", "판매", "방법",
-                                              "(주)", "소비자", "상담", "직사광선"};
+                                              "(주)", "소비자", "상담", "직사광선", "알레르기"};
     private static final String[] ALLERGY_INGREDIENTS = {"밀", "대두", "쇠고기", "돼지고기", "닭고기", "우유", "메밀",
                                                         "토마토", "계란", "아황산류", "조개류", "알류", "난류"};
     private static final String[] COUNTRIES = {"미국", "캐나다", "호주", "중국", "러시아", "베트남", "프랑스", "브라질",
                                                "태국", "독일", "뉴질랜드", "이탈리아", "스페인", "일본", "멕시코",
                                                "네덜란드", "인도(?:네시아)?"};
 
-    private static final double ERROR_MARGIN = 3.5;  // 오차 범위
     private static final Pattern SPECIAL_CHAR_PATTERN = Pattern.compile("[\\[\\]:]");  // 특수문자 확인
     private static final Pattern INGREDIENT_SEPARATOR = Pattern.compile("^[*·]?[가-힣]+[:/]");  // 원재료 구분자 확인
 
@@ -27,7 +26,7 @@ public class IngredientUtil {
 
         for (String text : textList) {
             // 1. 일반 키워드 확인
-            if (isKeyword(text) || (text.contains("재료") || text.contains("원료"))) {
+            if (isKeyword(text) || (text.contains("원재료") || text.contains("원료"))) {
                 if (isExtractingReportNumber) break;
                 continue;
             }
@@ -36,7 +35,7 @@ public class IngredientUtil {
             if (text.contains("품목")) {
                 if (text.contains(":")) {
                     text = text.split(":", 2)[1];
-                    reportNum = new StringBuilder(text);
+                    reportNum.append(text);
                 }
                 isExtractingReportNumber = true;
                 continue;
@@ -46,19 +45,21 @@ public class IngredientUtil {
             if (isExtractingReportNumber)
                 reportNum.append(text);
         }
-
         if (reportNum.isEmpty()) return null;
-        String[] parts = reportNum.toString().split(",");
-        return parts[0].replaceAll("[^0-9]", "");
+        String[] parts = reportNum.toString().split("[,/(]");
+        return parts[0].replaceAll("[^F0-9]", "") // 불필요한 문자 제거
+                .replaceFirst("F\\d", "")
+                .replaceAll("F.*", ""); // 여러 품목보고번호 처리
     }
 
     public static List<String> extractIngredient(List<String> textList, List<Double> startCoords, List<Double> endCoords) {
         double prevEndX = 0.0;  // 이전 종료 좌표
         double ingredientsX = 0.0;  // 원재료 추출 좌표
+        double maxX = 0.0; // 마지막 좌표
+        double errorMargin = 2.5; // 오차 범위
 
         List<String> ingredients = new ArrayList<>();  // 원재료 리스트
         List<String> tempIngredients = new ArrayList<>();  // 임시 원재료 리스트
-        List<String> deleteIngredients = new ArrayList<>();  // 삭제 원재료 리스트
         StringBuilder tempIngredient = new StringBuilder();  // 원재료를 저장할 변수
         StringBuilder allergy = new StringBuilder();  // 알레르기를 저장할 변수
 
@@ -69,6 +70,13 @@ public class IngredientUtil {
         boolean isPrevDot = false;  // 단일 특수문자 여부
         boolean isEndComma = true;  // 콤마 종료 여부
 
+        // 마지막 좌표 갱신
+        for (int i = 0; i < textList.size(); i++)
+            maxX = Math.max(maxX, endCoords.get(i));
+
+        errorMargin *= (maxX / 100); // 오차 범위에 이미지 크기 고려
+
+        // 텍스트 추출
         for (int i = 0; i < textList.size(); i++) {
             String text = textList.get(i);
             double startX = startCoords.get(i);
@@ -127,7 +135,6 @@ public class IngredientUtil {
                         continue;
                     }
                     // 다른 키워드가 나왔을 때 임시 원재료 리스트 삭제
-                    deleteIngredients = tempIngredients;
                     tempIngredients.clear();
                     isStartKeyword = false;
                     isSkip = true;
@@ -136,12 +143,12 @@ public class IngredientUtil {
             }
 
             // 3. "원재료" 또는 "원료" 키워드 확인 (추출 시작)
-            if (!isExtractingIngredients && (text.contains("재료") || text.contains("원료"))) {
+            if (!isExtractingIngredients && (text.contains("원재료") || text.contains("원료"))) {
                 ingredientsX = startX;
 
                 // 특수문자가 포함되면 심플 형태로 판단
                 if (containsSpecialCharacter(text)) {
-                    // "원재료" 키워드와 합쳐진 원재료 처리
+                    // 키워드와 합쳐진 원재료 처리
                     if (text.contains(":")) {
                         String[] temp = text.split(":", 2);
                         if (temp.length > 1)
@@ -159,10 +166,11 @@ public class IngredientUtil {
 
             // 4. 원재료로 추정되는 텍스트 처리
             if (!isSimpleShape && !isExtractingIngredients)
-                if (containsKoreanCharacter(text)) tempIngredient.append(text);
+                if (containsKoreanCharacter(text))
+                    tempIngredient.append(text);
 
             // 5. 원재료 추출 중이면 텍스트 추가
-            if ((isSimpleShape || ingredientsX - ERROR_MARGIN < startX) && isExtractingIngredients) {
+            if ((isSimpleShape || ingredientsX - errorMargin <= startX) && isExtractingIngredients) {
                 if (ingredientsX > startX)
                     ingredientsX = startX;  // 원재료 추출 좌표 갱신
 
@@ -222,12 +230,13 @@ public class IngredientUtil {
         }
 
         // 마지막 원재료 처리
-        if (!tempIngredient.isEmpty())
-            tempIngredients.add(tempIngredient.toString());
+        if (!tempIngredient.isEmpty()) {
+            String temp = tempIngredient.toString();
 
-        // 원재료명 키워드가 없는 경우 처리
-        if (tempIngredients.isEmpty())
-            tempIngredients = deleteIngredients;
+            // 콤마가 있거나 공백이 없고 숫자로만 구성되지 않으면 임시 원재료 리스트에 추가
+            if ((temp.contains(",") || !temp.contains(" ")) && !temp.matches("\\d+"))
+                tempIngredients.add(temp);
+        }
 
         // 한 줄로 변경
         for (String ingredient : tempIngredients) {
@@ -458,9 +467,12 @@ public class IngredientUtil {
         // 배열을 정규식으로 변환하여 국가명 제거
         String countryPattern = String.join("|", COUNTRIES);
 
+        // "구연산", "젖산", "초산", "푸르마산"을 제외하기 위한 정규식
+        String exemptPattern = "구연산|젖산|초산|푸르마산";
+
         return input.replaceAll("\\(외국산:[^)]*\\)", "")  // '외국산:'이 들어간 소괄호 전체 제거
                 .replaceAll("외국산\\([^)]*\\)", "")  // '외국산' 뒤에 나오는 소괄호 제거
-                .replaceAll("\\b[가-힣]+산\\b", "")  // 'OO산' 형태의 원산지 제거
+                .replaceAll("\\b(?!(" + exemptPattern + "))([가-힣]+산)\\b", "")  // 'OO산' 형태의 원산지 제거
                 .replaceAll("\\b(" + countryPattern + ")\\b", "")  // 국가명 제거
                 .replaceAll(",\\)", ")")  // 콤마 제거 후 괄호 닫기
                 .replaceAll("\\([^가-힣]*\\)", "")  // 소괄호 안에 한글이 없는 경우 괄호 제거

@@ -8,6 +8,7 @@ import com.shinhan.VRRS.repository.*;
 import com.shinhan.VRRS.util.HashUtil;
 import com.shinhan.VRRS.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;

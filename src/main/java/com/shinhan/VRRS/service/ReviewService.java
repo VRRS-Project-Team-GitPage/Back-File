@@ -1,6 +1,7 @@
 package com.shinhan.VRRS.service;
 
 import com.shinhan.VRRS.dto.ReviewDTO;
+import com.shinhan.VRRS.dto.ect.PreviewReview;
 import com.shinhan.VRRS.dto.response.UserReviewResponse;
 import com.shinhan.VRRS.entity.*;
 import com.shinhan.VRRS.repository.ProductRepository;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -61,16 +63,26 @@ public class ReviewService {
     }
 
     // 최신 리뷰 3개 조회
-    public List<ReviewDTO> getPreviewReview(Long proId) {
+    public PreviewReview getPreviewReview(Long proId, Long userId) {
         Pageable pageable = PageRequest.of(0, 3);
         List<Review> reviews = reviewRepository.findLatestPreviewByProId(proId, pageable);
-        List<ReviewDTO> result = new ArrayList<>();
+        List<ReviewDTO> previewReview = new ArrayList<>();
+
+        PreviewReview result = new PreviewReview();
 
         // 닉네임 및 채식유형 조회
-        for (Review review : reviews)
-            userRepository.findById(review.getUserId())
-                    .ifPresent(user -> result.add(new ReviewDTO(review, user)));
+        for (int i = 0; i < reviews.size(); i++) {
+            Review review = reviews.get(i);
+            User user = userRepository.findById(review.getUserId()).orElse(null);
 
+            if (user != null) {
+                // 사용자 리뷰 인덱스 설정
+                if (Objects.equals(user.getId(), userId))
+                    result.setReviewIndex(i);
+                previewReview.add(new ReviewDTO(review, user));
+            }
+        }
+        result.setReviews(previewReview);
         return result;
     }
 

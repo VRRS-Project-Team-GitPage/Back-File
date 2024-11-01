@@ -40,13 +40,12 @@ public class ProductController {
 
     // 제품 상세 조회
     @GetMapping("/{proId}")
-    public ResponseEntity<ProductDetailsResponse> getProductDetails(/*@RequestHeader("Authorization") String jwt,*/
+    public ResponseEntity<ProductDetailsResponse> getProductDetails(@RequestHeader("Authorization") String jwt,
                                                                     @PathVariable("proId") @Min(1) Long proId) {
-//        Long userId = userService.getUserFromJwt(jwt).getId();
-        Long userId = userService.getUserByUsername("veggielife").getId();
+        Long userId = userService.getUserFromJwt(jwt).getId();
         ProductDetailsResponse productDetails = productService.newProductDetails(proId);
         productDetails.setBookmark(bookmarkService.existsBookmark(proId, userId));
-        productDetails.setReviews(reviewService.getPreviewReview(proId));
+        productDetails.setReviews(reviewService.getPreviewReview(proId, userId));
         return ResponseEntity.ok(productDetails);
     }
 
@@ -62,15 +61,16 @@ public class ProductController {
 
     // 제품 등록
     @PostMapping("/submit")
-    public ResponseEntity<Void> saveProduct(@RequestParam("image") MultipartFile image,
+    public ResponseEntity<Void> saveProduct(@RequestParam("file") MultipartFile file,
                                             @RequestParam("jsonData") String jsonData) {
         try {
             Product product = productService.newProduct(jsonData);
             if (product == null)
                 return new ResponseEntity<>(HttpStatus.CONFLICT); // 409 Conflict
 
-            String imgPath = imageService.uploadProductImage(image);
-            productService.saveProduct(product, imgPath);
+            String imgName = imageService.getImgName(); // 이미지명
+            imageService.uploadProductImage(file, imgName);
+            productService.saveProduct(product, "/products/" + imgName);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 204 No Content
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR); // 500 Sever Error

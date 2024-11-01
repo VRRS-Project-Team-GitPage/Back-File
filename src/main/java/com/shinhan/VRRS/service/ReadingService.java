@@ -36,18 +36,18 @@ public class ReadingService {
             List<Integer> vegTypes = ingredientRepository.findVegTypeByIngredientName(mainIngredient);
             Integer vegType = vegTypes.isEmpty() ? null : vegTypes.get(0);
 
-            if (vegType == null) {
+            if (vegType == null && isBracketContains(ingredient)) {
                 // 괄호 안 원재료 확인
                 List<String> subIngredients = extractBracketContent(ingredient);
                 boolean isSubStart = true;
 
                 for (String subIngredient : subIngredients) {
                     // 괄호 밖의 원재료 먼저 처리
-                    String subMainIngredient = getMainIngredient(ingredient);
+                    String subMainIngredient = getMainIngredient(subIngredient);
                     List<Integer> subVegTypes = ingredientRepository.findVegTypeByIngredientName(subMainIngredient);
                     Integer subVegType = subVegTypes.isEmpty() ? null : subVegTypes.get(0);
 
-                    if (subVegType == null) {
+                    if (subVegType == null && isBracketContains(subIngredient)) {
                         // 괄호 안 세부 원재료가 있는 경우 처리
                         List<String> detailedIngredients = extractBracketContent(subIngredient);
                         boolean isDetailStart = true;
@@ -142,6 +142,11 @@ public class ReadingService {
         return new IngredientResponse(finalVegTypeId, String.join(", ", ingredients), consumables, nonConsumables, unidentifiables);
     }
 
+    // 괄호 포함 여부 검사 메서드
+    private boolean isBracketContains(String ingredient) {
+        return ingredient.contains("(") || ingredient.contains("[");
+    }
+
     // 괄호 밖 원재료 추출 메서드
     private String getMainIngredient(String ingredient) {
         int firstBracket = Math.min(
@@ -167,7 +172,9 @@ public class ReadingService {
                 if (!stack.isEmpty()) {
                     stack.pop();
                     if (stack.isEmpty()) {
-                        results.add(currentContent.toString().trim());
+                        String[] items = currentContent.toString().trim().split(","); // 쉼표로 나누기
+                        // 각 아이템을 리스트에 추가
+                        results.addAll(Arrays.asList(items));
                         currentContent.setLength(0); // 초기화
                     } else {
                         currentContent.append(c);

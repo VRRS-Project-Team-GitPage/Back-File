@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.thymeleaf.context.Context;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.spring6.SpringTemplateEngine;
@@ -22,9 +23,8 @@ public class EmailService {
     private final JavaMailSender javaMailSender;
     private final SpringTemplateEngine templateEngine;
 
-    public String sendMail(EmailMessage emailMassage, String type) throws MessagingException {
-        String code = createCode(); // 인증번호 및 임시 비밀번호 생성
-
+    @Async
+    public void sendMail(EmailMessage emailMassage, String code, String type) throws MessagingException {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
 
         MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, false, "UTF-8");
@@ -37,7 +37,6 @@ public class EmailService {
         mimeMessageHelper.setSubject(emailMassage.getSubject()); // 메일 제목
         mimeMessageHelper.setText(setContext(code, type), true); // 메일 본문 내용, HTML 여부
         javaMailSender.send(mimeMessage);
-        return code;
     }
 
     public String createCode() {

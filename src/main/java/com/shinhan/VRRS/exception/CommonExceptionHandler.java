@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 @ControllerAdvice
-public class GlobalExceptionHandler {
+public class CommonExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleMethodArgumentNotValid() {
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // 400 Bad Request

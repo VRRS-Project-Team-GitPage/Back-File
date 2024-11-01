@@ -27,17 +27,14 @@ public class ImageService {
     private String uploadDir;
 
     @Async
-    public String uploadProductImage(MultipartFile image) throws IOException {
-        String imgName = UUID.randomUUID() + ".webp"; // 이미지명
-        String dbImgPath = "/products/" + imgName; // DB에 저장할 이미지 경로
-
+    public void uploadProductImage(MultipartFile file, String imgName) throws IOException {
         // 디렉토리 확인 및 생성
         Path dirPath = Paths.get(uploadDir + "/products/");
         if (!Files.exists(dirPath)) Files.createDirectories(dirPath);
 
         // 임시 파일 생성
         File originalFile = new File(dirPath.toString(), UUID.randomUUID() + ".temp");
-        image.transferTo(originalFile);
+        file.transferTo(originalFile);
 
         // WebP로 변환
         File webpFile = new File(dirPath.toString(), imgName);
@@ -45,8 +42,10 @@ public class ImageService {
 
         if (!originalFile.delete())
             log.error("파일 삭제에 실패했습니다: {}", originalFile.getAbsolutePath());
+    }
 
-        return dbImgPath;
+    public String getImgName() {
+        return UUID.randomUUID() + ".webp"; // 이미지명
     }
 
     public Resource getImage(String imgPath) throws MalformedURLException {

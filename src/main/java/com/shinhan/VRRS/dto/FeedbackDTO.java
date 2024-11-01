@@ -13,6 +13,6 @@ public class FeedbackDTO {
     @Pattern(regexp = "^(DUP : \\d{1,4}|ERR : \\d{1,4}|RD|ECT)$")
     private String type = "ECT";
     @NotBlank
-    @Size(max = 500)
+    @Size(max = 250)
     private String content;
 }

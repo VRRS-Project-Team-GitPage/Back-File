@@ -73,7 +73,7 @@ public class ProductService {
         // 필드 값 추출
         String name = jsonNode.path("name").asText();
         String ingredients = jsonNode.path("ingredients").asText();
-        String reportNum = jsonNode.path("reportNum").asText(null);
+        String reportNum = jsonNode.path("reportNum").asText("");
         Integer categoryId = jsonNode.path("categoryId").asInt();
         Integer vegTypeId = jsonNode.path("vegTypeId").asInt();
 
@@ -82,8 +82,10 @@ public class ProductService {
             throw new IllegalArgumentException();
 
         // 제품 중복 확인
-        if (reportNum != null)
+        if (reportNum.isEmpty()) {
+            reportNum = null;
             if (productRepository.existsByReportNum(reportNum)) return null;
+        }
 
         // Product 객체 생성
         Product product = new Product();

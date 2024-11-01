@@ -29,7 +29,7 @@ import java.util.NoSuchElementException;
 public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
-    private final EmailService mailService;
+    private final EmailService emailService;
 
     // 회원가입
     @PostMapping("/join")
@@ -43,7 +43,7 @@ public class AuthController {
     }
 
     // 로그인
-    @PostMapping("/login")
+    @PutMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         try {
             authenticationManager.authenticate(
@@ -90,7 +90,8 @@ public class AuthController {
                                                 .build();
 
         try {
-            String code = mailService.sendMail(emailMessage, "password");
+            String code = emailService.createCode();
+            emailService.sendMail(emailMessage, code, "password");
             return ResponseEntity.ok(Map.of("code", code));
         } catch (MessagingException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR); // 500 Server Error
@@ -129,7 +130,8 @@ public class AuthController {
                                                 .build();
 
         try {
-            String code = mailService.sendMail(emailMessage, "email");
+            String code = emailService.createCode();
+            emailService.sendMail(emailMessage, code,"email");
             return ResponseEntity.ok(Map.of("code", code));
         } catch (MessagingException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR); // 500 Sever Error

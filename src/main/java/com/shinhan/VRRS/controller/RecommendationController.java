@@ -29,29 +29,27 @@ public class RecommendationController {
 
     // 카테고리 기반 추천
     @GetMapping("/category/{categoryId}")
-    public ResponseEntity<List<ProductDTO>> recommendByCategory(/*@RequestHeader("Authorization") String jwt,*/
+    public ResponseEntity<ProductDTO> recommendByCategory(@RequestHeader("Authorization") String jwt,
                                                                 @PathVariable("categoryId")
                                                                 @Min(1) @Max(4) Integer categoryId) {
-//        User user = userService.getUserFromJwt(jwt);
-        User user = userService.getUserByUsername("veggielife");
-        List<ProductDTO> similarProducts = recommendationService.recommendByCategory(categoryId, user);
-        if (similarProducts.isEmpty())
+        User user = userService.getUserFromJwt(jwt);
+        ProductDTO similarProducts = recommendationService.recommendByCategory(categoryId, user);
+        if (similarProducts == null)
             return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 204 No Content
         return ResponseEntity.ok(similarProducts);
     }
 
     // 키워드 기반 추천
     @GetMapping("/keyword/{keyword}")
-    public ResponseEntity<List<ProductDTO>> recommendByKeyword(/*@RequestHeader("Authorization") String jwt,*/
-                                                               @PathVariable("keyword") String keyword) {
+    public ResponseEntity<ProductDTO> recommendByKeyword(@RequestHeader("Authorization") String jwt,
+                                                         @PathVariable("keyword") String keyword) {
         keyword = keyword.trim();
         if (keyword.isEmpty())
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // 400 Bad Request
 
-//        User user = userService.getUserFromJwt(jwt);
-        User user = userService.getUserByUsername("veggielife");
-        List<ProductDTO> recommendedProducts = recommendationService.recommendByKeyword(keyword, user);
-        if (recommendedProducts.isEmpty())
+        User user = userService.getUserFromJwt(jwt);
+        ProductDTO recommendedProducts = recommendationService.recommendByKeyword(keyword, user);
+        if (recommendedProducts == null)
             return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 204 No Content
         return ResponseEntity.ok(recommendedProducts);
     }

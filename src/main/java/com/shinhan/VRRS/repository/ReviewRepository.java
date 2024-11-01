@@ -22,7 +22,7 @@ public interface ReviewRepository extends JpaRepository<Review, CompositePK> {
     List<Review> findByUserIdOrderByDateAsc(Long userId);
 
     // 다른 사용자의 최신 리뷰 3개 가져오기
-    @Query("SELECT r FROM Review r WHERE r.proId = :proId AND r.content IS NOT NULL ORDER BY r.date DESC")
+    @Query("SELECT r FROM Review r WHERE r.proId = :proId ORDER BY r.date DESC")
     List<Review> findLatestPreviewByProId(@Param("proId") Long proId, Pageable pageable);
 
     // 사용자가 리뷰한 제품의 ID 목록 조회

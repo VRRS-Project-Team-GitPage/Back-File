@@ -20,9 +20,8 @@ public class BookmarkController {
 
     // 북마크 조회
     @GetMapping
-    public ResponseEntity<List<ProductDTO>> getBookmarksByUserId(/*@RequestHeader("Authorization") String jwt,*/) {
-//        Long userId = userService.getUserFromJwt(jwt).getId();
-        Long userId = userService.getUserByUsername("veggielife").getId();
+    public ResponseEntity<List<ProductDTO>> getBookmarksByUserId(@RequestHeader("Authorization") String jwt) {
+        Long userId = userService.getUserFromJwt(jwt).getId();
         List<ProductDTO> bookmarks = bookmarkService.getBookmarks(userId);
 
         if (bookmarks.isEmpty())
@@ -32,20 +31,18 @@ public class BookmarkController {
 
     // 북마크 추가
     @PostMapping("/insert")
-    public ResponseEntity<Void> saveBookmark(/*@RequestHeader("Authorization") String jwt,*/
+    public ResponseEntity<Void> saveBookmark(@RequestHeader("Authorization") String jwt,
                                              @RequestParam("proId") @Min(1) Long proId) {
-//        Long userId = userService.getUserFromJwt(jwt).getId();
-        Long userId = userService.getUserByUsername("veggielife").getId();
+        Long userId = userService.getUserFromJwt(jwt).getId();
         bookmarkService.saveBookmark(proId, userId);
         return ResponseEntity.status(HttpStatus.CREATED).build(); // 201 Created
     }
 
     // 북마크 삭제
     @DeleteMapping("/delete")
-    public ResponseEntity<Void> deleteBookmark(/*@RequestHeader("Authorization") String jwt,*/
+    public ResponseEntity<Void> deleteBookmark(@RequestHeader("Authorization") String jwt,
                                                @RequestParam("proId") @Min(1) Long proId) {
-//        Long userId = userService.getUserFromJwt(jwt).getId();
-        Long userId = userService.getUserByUsername("veggielife").getId();
+        Long userId = userService.getUserFromJwt(jwt).getId();
         bookmarkService.deleteBookmark(proId, userId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 204 No Content
     }

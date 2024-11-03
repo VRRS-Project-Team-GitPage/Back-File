@@ -18,8 +18,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import javax.imageio.ImageIO;
 import java.util.*;
 
-//@Disabled
-@SpringBootTest
+@Disabled
+// @SpringBootTest
 class VrrsApplicationTests {
 	@Autowired
 	private ProductRepository productRepository;

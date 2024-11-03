@@ -81,11 +81,12 @@ public class ProductService {
         if (categoryId < 1 || categoryId > 4 || vegTypeId < 1 || vegTypeId > 6)
             throw new IllegalArgumentException();
 
-        // 제품 중복 확인
-        if (reportNum.isEmpty()) {
+        // 빈 품목보고번호 -> null
+        if (reportNum.isEmpty())
             reportNum = null;
-            if (productRepository.existsByReportNum(reportNum)) return null;
-        }
+
+        // 제품 중복 확인
+        if (reportNum != null && productRepository.existsByReportNum(reportNum)) return null;
 
         // Product 객체 생성
         Product product = new Product();

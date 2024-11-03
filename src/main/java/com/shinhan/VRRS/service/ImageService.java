@@ -10,26 +10,26 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.UUID;
 
 @Slf4j
 @Service
 public class ImageService {
-    @Value("${file.upload-dir}")
-    private String uploadDir;
+    @Value("${file.image-dir}")
+    private String imageDir;
 
     @Async
     public void uploadProductImage(MultipartFile file, String imgName) throws IOException {
         // 디렉토리 확인 및 생성
-        Path dirPath = Paths.get(uploadDir + "/products/");
+        Path dirPath = Paths.get(imageDir + "/products/");
         if (!Files.exists(dirPath)) Files.createDirectories(dirPath);
 
         // 임시 파일 생성
@@ -45,11 +45,12 @@ public class ImageService {
     }
 
     public String getImgName() {
-        return UUID.randomUUID() + ".webp"; // 이미지명
+        String date = new SimpleDateFormat("yyMMdd").format(new Date());
+        return UUID.randomUUID() + "-" + date + ".webp"; // 이미지명
     }
 
     public Resource getImage(String imgPath) throws MalformedURLException {
-        Path file = Paths.get(uploadDir).resolve(imgPath);
+        Path file = Paths.get(imageDir).resolve(imgPath);
         return new UrlResource(file.toUri());
     }
 }

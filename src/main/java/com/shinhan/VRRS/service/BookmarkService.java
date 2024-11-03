@@ -7,7 +7,6 @@ import com.shinhan.VRRS.entity.Product;
 import com.shinhan.VRRS.repository.BookmarkRepository;
 import com.shinhan.VRRS.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

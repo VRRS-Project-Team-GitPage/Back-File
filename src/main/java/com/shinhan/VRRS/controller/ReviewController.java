@@ -5,7 +5,6 @@ import com.shinhan.VRRS.dto.ReviewDTO;
 import com.shinhan.VRRS.dto.request.ReviewRequest;
 import com.shinhan.VRRS.dto.response.UserReviewResponse;
 import com.shinhan.VRRS.entity.Review;
-import com.shinhan.VRRS.entity.User;
 import com.shinhan.VRRS.service.ReviewService;
 import com.shinhan.VRRS.service.UserService;
 import jakarta.validation.Valid;

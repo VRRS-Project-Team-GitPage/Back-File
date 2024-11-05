@@ -111,7 +111,7 @@ public class ReviewService {
 
     // 정렬 기준에 따라 사용자 리뷰 조회
     public List<Review> getUserReviews(Long userId) {
-        return reviewRepository.findByUserIdOrderByDateAsc(userId);
+        return reviewRepository.findByUserIdOrderByDateDesc(userId);
     }
 
     // 리뷰 저장 메서드

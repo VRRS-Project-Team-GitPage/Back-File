@@ -78,7 +78,7 @@ public class ProductService {
         Integer vegTypeId = jsonNode.path("vegTypeId").asInt();
 
         // 추가 유효성 검사
-        if (categoryId < 1 || categoryId > 4 || vegTypeId < 1 || vegTypeId > 6)
+        if (!reportNum.matches("\\d*") || categoryId < 1 || categoryId > 4 || vegTypeId < 1 || vegTypeId > 6)
             throw new IllegalArgumentException();
 
         // 빈 품목보고번호 -> null

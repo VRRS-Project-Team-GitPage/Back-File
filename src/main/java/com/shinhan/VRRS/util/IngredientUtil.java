@@ -5,6 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Stack;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class IngredientUtil {
     private static final String[] KEYWORDS = {"제품명", "식품유형", "식품의", "제조", "기한", "내용량", "재질", "업소",
@@ -20,7 +21,7 @@ public class IngredientUtil {
     private static final Pattern INGREDIENT_SEPARATOR = Pattern.compile("^[*·]?[가-힣]+[:/]");  // 원재료 구분자 확인
 
     public static String extractReportNum(List<String> textList) {
-        StringBuilder reportNum = new StringBuilder();  // 품목보고번호
+        StringBuilder tempReportNum = new StringBuilder();  // 품목보고번호
 
         boolean isExtractingReportNumber = false;
 
@@ -35,7 +36,7 @@ public class IngredientUtil {
             if (text.contains("품목")) {
                 if (text.contains(":")) {
                     text = text.split(":", 2)[1];
-                    reportNum.append(text);
+                    tempReportNum.append(text);
                 }
                 isExtractingReportNumber = true;
                 continue;
@@ -43,13 +44,28 @@ public class IngredientUtil {
 
             // 3. 품목보고번호 추출 중이면 텍스트 추가
             if (isExtractingReportNumber)
-                reportNum.append(text);
+                tempReportNum.append(text);
         }
-        if (reportNum.isEmpty()) return null;
-        String[] parts = reportNum.toString().split("[,/(]");
-        return parts[0].replaceAll("[^F0-9]", "") // 불필요한 문자 제거
-                .replaceFirst("F\\d", "")
-                .replaceAll("F.*", ""); // 여러 품목보고번호 처리
+        if (tempReportNum.isEmpty()) return null;
+        return extractCleanReportNum(tempReportNum);
+    }
+
+    private static String extractCleanReportNum(StringBuilder tempReportNum) {
+        String reportNum = tempReportNum.toString();
+
+        if (reportNum.matches("^[0-9].*")) {
+            reportNum = reportNum.split("[,/(]", 2)[0];
+        } else if (reportNum.startsWith("(")) {
+            reportNum = reportNum.split("\\(", 2)[1];
+        } else if (reportNum.startsWith("F")) {
+            reportNum = reportNum.replaceFirst("F\\d", "")
+                    .replaceAll("F.*", "");
+        } else {
+            reportNum = reportNum.replaceFirst("[가-힣]+", "")
+                    .replaceAll("[가-힣].*", "");
+        }
+
+        return reportNum.replaceAll("[^0-9]", ""); // 불필요한 문자 제거
     }
 
     public static List<String> extractIngredient(List<String> textList, List<Double> startCoords, List<Double> endCoords) {
@@ -264,9 +280,13 @@ public class IngredientUtil {
             // 괄호 밖 ","를 기준으로 분리
             List<String> tempList = splitByCommaOutsideBrackets(text);
 
+            // 빈 문자열 필터링
+            tempList = tempList.stream()
+                    .filter(temp -> !temp.isEmpty())
+                    .toList();
+
             for (String temp : tempList) {
-                if (temp.isEmpty()) continue;
-                else if (temp.contains("(") || temp.contains("[")) {
+                if (temp.contains("(") || temp.contains("[")) {
                     temp = removeOrigin(temp);
                     if(temp.contains("[")) {
                         temp = modifyIngredients(temp);
@@ -467,8 +487,8 @@ public class IngredientUtil {
         // 배열을 정규식으로 변환하여 국가명 제거
         String countryPattern = String.join("|", COUNTRIES);
 
-        // "구연산", "젖산", "초산", "푸르마산"을 제외하기 위한 정규식
-        String exemptPattern = "구연산|젖산|초산|푸르마산";
+        // 'OO산' 형태의 원재료를 제외하기 위한 정규식
+        String exemptPattern = "구연산|젖산|초산|푸르마산|계피산";
 
         return input.replaceAll("\\(외국산:[^)]*\\)", "")  // '외국산:'이 들어간 소괄호 전체 제거
                 .replaceAll("외국산\\([^)]*\\)", "")  // '외국산' 뒤에 나오는 소괄호 제거
@@ -482,6 +502,8 @@ public class IngredientUtil {
 
     // 중복 제거 함수 (순서 유지)
     private static List<String> removeDuplicates(List<String> input) {
-        return new ArrayList<>(new LinkedHashSet<>(input));
+        return new ArrayList<>(new LinkedHashSet<>(input.stream()
+                .filter(str -> !str.isEmpty())
+                .collect(Collectors.toList())));
     }
 }

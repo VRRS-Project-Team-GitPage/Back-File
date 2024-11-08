@@ -113,10 +113,6 @@ public class OcrService {
         String reportNum = IngredientUtil.extractReportNum(textList);
         List<String> ingredients = IngredientUtil.extractIngredient(textList, startCoords, endCoords);
 
-        // 추출된 원재료명이 없는 경우
-        if (ingredients.isEmpty())
-            ingredients = Collections.singletonList(String.join(" ", textList));
-
         // 괄호 검사
         List<String> processedIngredients = IngredientUtil.processIngredients(ingredients);
 

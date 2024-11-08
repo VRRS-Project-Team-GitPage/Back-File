@@ -72,7 +72,14 @@ public class ReadingCotroller {
             proId = product.getId();
             ingredients = IngredientUtil.splitByCommaOutsideBrackets(product.getIngredients());
         } else {
-            List<String> ingredienSingleList = Collections.singletonList(request.getIngredients());
+            // 공백 및 콤마 제거
+            String cleanIngredients = request.getIngredients()
+                    .replaceAll("\\s+", "")
+                    .replaceAll("\\(,", "(")
+                    .replaceAll(",\\)", ")")
+                    .replaceAll(",{2,}", ",");
+
+            List<String> ingredienSingleList = Collections.singletonList(cleanIngredients);
             ingredienSingleList = IngredientUtil.processIngredients(ingredienSingleList);
 
             // 괄호 검사

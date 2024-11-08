@@ -71,15 +71,17 @@ public class ProductService {
         }
 
         // 필드 값 추출
-        String name = jsonNode.path("name").asText();
-        String ingredients = jsonNode.path("ingredients").asText();
-        String reportNum = jsonNode.path("reportNum").asText("");
+        String name = jsonNode.path("name").asText().trim();
+        String ingredients = jsonNode.path("ingredients").asText().trim();
+        String reportNum = jsonNode.path("reportNum").asText().trim();
         Integer categoryId = jsonNode.path("categoryId").asInt();
         Integer vegTypeId = jsonNode.path("vegTypeId").asInt();
 
         // 추가 유효성 검사
-        if (!reportNum.matches("\\d*") || categoryId < 1 || categoryId > 4 || vegTypeId < 1 || vegTypeId > 6)
+        if (name.isEmpty() || ingredients.isEmpty() || name.length() > 100 || ingredients.length() > 500 ||
+            !reportNum.matches("\\d*") || categoryId < 1 || categoryId > 4 || vegTypeId < 1 || vegTypeId > 6) {
             throw new IllegalArgumentException();
+        }
 
         // 빈 품목보고번호 -> null
         if (reportNum.isEmpty())

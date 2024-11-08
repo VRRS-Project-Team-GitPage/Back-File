@@ -56,7 +56,7 @@ public class ReviewController {
     public ResponseEntity<Review> submitReview(@RequestHeader("Authorization") String jwt,
                                                @Valid @RequestBody ReviewRequest request) {
         Long userId = userService.getUserFromJwt(jwt).getId();
-        Review review = reviewService.saveReview(request.getProId(), userId, request.getContent(), request.isRec());
+        Review review = reviewService.saveReview(request.getProId(), userId, request.getContent().trim(), request.isRec());
         return ResponseEntity.status(HttpStatus.CREATED).body(review); // 201 Created
     }
 
@@ -65,7 +65,7 @@ public class ReviewController {
     public ResponseEntity<Review> updateReview(@RequestHeader("Authorization") String jwt,
                                                @Valid @RequestBody ReviewRequest request) {
         Long userId = userService.getUserFromJwt(jwt).getId();
-        Review review = reviewService.updateReview(request.getProId(), userId, request.getContent(), request.isRec());
+        Review review = reviewService.updateReview(request.getProId(), userId, request.getContent().trim(), request.isRec());
         return ResponseEntity.ok(review);
     }
 

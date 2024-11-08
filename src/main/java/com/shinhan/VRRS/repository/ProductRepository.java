@@ -20,10 +20,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("SELECT p FROM Product p WHERE p.vegType.id IN :vegTypeIds")
     List<Product> findByVegTypeIds(@Param("vegTypeIds") List<Integer> vegTypeIds);
 
-    @Query("SELECT p FROM Product p ORDER BY (p.recCnt * 0.5 + p.bookmarkCnt) DESC")
+    @Query("SELECT p FROM Product p ORDER BY (p.recCnt + p.bookmarkCnt * 0.5) DESC")
     List<Product> findAllOrderByPopularity();
 
-    @Query("SELECT p FROM Product p WHERE p.vegType.id IN :vegTypeIds ORDER BY (p.recCnt * 0.5 + p.bookmarkCnt) DESC")
+    @Query("SELECT p FROM Product p WHERE p.vegType.id IN :vegTypeIds ORDER BY (p.recCnt + p.bookmarkCnt * 0.5) DESC")
     List<Product> findByVegTypeIdsOrderByPopularity(@Param("vegTypeIds") List<Integer> vegTypeIds);
 
     @Modifying
